@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+    <head>
+        <meta
+            charset="UTF-8"
+            http-equiv="Content-Security-Policy"
+            content="
+                default-src 'self';
+                style-src 'self' 'unsafe-inline';
+                font-src 'self' data:;
+                script-src 'self';
+                "
+            />
+        <title>LauncherPAH</title>
+    </head>
+    <body>
+        <script type="module" src="/src/renderer.ts"></script>
+    </body>
+</html>
