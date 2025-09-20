@@ -5,4 +5,3 @@ import ButtonStack from "./components/buttonStack";
 
 const root = createRoot(document.body);
 root.render(<ButtonStack />);
-

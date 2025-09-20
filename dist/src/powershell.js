@@ -1,8 +1,10 @@
-import { spawn } from "child_process";
-
-export async function run(executable: string, args: string[], opts = {}): Promise<number> {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.run = void 0;
+const child_process_1 = require("child_process");
+async function run(executable, args, opts = {}) {
     return new Promise((resolve, reject) => {
-        const child = spawn(executable, args, {
+        const child = (0, child_process_1.spawn)(executable, args, {
             shell: true,
             stdio: ["pipe", process.stdout, process.stderr],
             ...opts,
@@ -11,10 +13,13 @@ export async function run(executable: string, args: string[], opts = {}): Promis
         child.on("exit", (code) => {
             if (code === 0) {
                 resolve(code);
-            } else {
+            }
+            else {
                 const e = new Error("Process exited with error code " + code);
                 reject(e);
             }
         });
     });
 }
+exports.run = run;
+//# sourceMappingURL=powershell.js.map

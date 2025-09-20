@@ -1,7 +1,7 @@
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import React from "react";
-import versionsJSON from "../../data/historical_versions.json";
+import versionsJSON from "../../../data/historical_versions.json";
 import DownloadProgress from "./progress";
 
 function buttonClick(index: number) {
@@ -26,6 +26,11 @@ export default function ButtonStack() {
                         {version.version}
                     </Button>
                 ))}
+                <Button key="test" variant="outlined" onClick={() => {
+                    window.electronAPI.send("install", {})
+                }}>
+                    {"Install"}
+                </Button>
             </Stack>
             <div style={{ width: 0, height: "1rem" }}></div>
             <DownloadProgress />

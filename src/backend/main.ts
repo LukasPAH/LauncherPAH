@@ -1,9 +1,9 @@
-import { app, BrowserWindow, ipcMain, WebContents } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
 import { download } from "electron-dl";
-import child_process from "child_process";
 import { run } from "./powershell";
+import fs from "fs";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -23,6 +23,7 @@ const createWindow = () => {
         },
     });
 
+    mainWindow.removeMenu();
     mainWindow.setBackgroundColor("#212322");
 
     // and load the index.html of the app.
@@ -42,6 +43,7 @@ const createWindow = () => {
 app.on("ready", () => {
     createWindow();
     ipcMain.on("download", mainDownload);
+    ipcMain.on("install", install);
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -66,16 +68,43 @@ app.on("activate", () => {
 
 async function mainDownload(_: Electron.IpcMainEvent, info: IDownloadProgressInfo) {
     const window = BrowserWindow.getFocusedWindow();
-    window.webContents.send("startDownload", true)
+    window.webContents.send("startDownload", true);
     await download(window, info.url, {
         directory: process.cwd() + "/data",
         onProgress(progress) {
             window.webContents.send("downloadProgress", progress);
         },
         onCompleted(_) {
-            window.webContents.send("downloadCompleted", undefined)
-        }
+            window.webContents.send("downloadCompleted", undefined);
+        },
     });
-    const code = await run("powershell", ["-executionpolicy", "unrestricted", "-file", "cwd"]);
-    process.exit(code);
+}
+
+const file = "D:\\Projects\\LauncherPAH\\data\\Microsoft.MinecraftWindowsBeta_1.21.12021.0_x64__8wekyb3d8bbwe.msixvc";
+const versionNameRegex = /[^\\]*.msixvc$/;
+const versionName = file.match(versionNameRegex)[0].replace(".msixvc", "");
+const drive = "D";
+const launcherLocation = "D:\\LauncherPAH";
+const installationsLocation = launcherLocation + "\\installations";
+const defaultPreviewLocation = drive + ":\\XboxGames\\Minecraft Preview for Windows\\Content\\";
+function moveExecutableCommand(targetLocation: string): string {
+    return `Invoke-CommandInDesktopPackage -PackageFamilyName "Microsoft.MinecraftWindowsBeta_8wekyb3d8bbwe" -app Game -Command "powershell" -Args "-Command Copy-Item '${defaultPreviewLocation}Minecraft.Windows.exe' '${installationsLocation}\\${targetLocation}'"`;
+}
+const removeAppxCommand = `Remove-AppxPackage -Package ${versionName}`;
+
+async function install(_: Electron.IpcMainEvent) {
+    await run(`Add-AppxPackage "${file}" -Volume ${drive}`);
+
+    const targetLocation = installationsLocation + "\\" + versionName;
+    if (!fs.existsSync(targetLocation)) fs.mkdirSync(targetLocation);
+    fs.cpSync(defaultPreviewLocation, targetLocation, {
+        filter(source) {
+            if (source.endsWith("Minecraft.Windows.exe")) return false;
+            return true;
+        },
+        recursive: true,
+    });
+    console.log(moveExecutableCommand(versionName));
+    await run(moveExecutableCommand(versionName));
+    await run(removeAppxCommand);
 }
