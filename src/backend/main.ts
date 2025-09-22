@@ -2,8 +2,10 @@ import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
 import { download } from "electron-dl";
-import { run } from "./powershell";
+import { execAsync, run } from "./powershell";
 import fs from "fs";
+import * as fsAsync from "fs/promises";
+import { dialog } from "electron";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -43,7 +45,7 @@ const createWindow = () => {
 app.on("ready", () => {
     createWindow();
     ipcMain.on("download", mainDownload);
-    ipcMain.on("install", install);
+    ipcMain.on("filePick", pickFile);
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -66,45 +68,161 @@ app.on("activate", () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 
+const launcherLocation = process.env.APPDATA + "\\LauncherPAH";
+
+async function pickFile() {
+    const window = BrowserWindow.getFocusedWindow();
+
+    const chosenFiles = await dialog.showOpenDialog(null, { properties: ["openFile"], title: "Open Custom MSIXVC", filters: [{ extensions: ["msixvc"], name: "" }] });
+    const chosenFile = chosenFiles.filePaths[0];
+    if (chosenFile === undefined || chosenFile === null) return;
+    if (!chosenFile.endsWith(".msixvc")) return;
+
+    const isBeta = chosenFile.includes("MinecraftWindowsBeta");
+
+    await install(chosenFile, window, isBeta, true);
+}
+
+function tryReadLocalData(): string | undefined {
+    try {
+        const contents = fs.readFileSync(process.env.APPDATA + "\\LauncherPAH\\data\\local_data.json").toString();
+        return contents;
+    } catch {
+        if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH")) fs.mkdirSync(process.env.APPDATA + "\\LauncherPAH");
+        if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH\\data")) fs.mkdirSync(process.env.APPDATA + "\\LauncherPAH\\data");
+        if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH\\installations")) fs.mkdirSync(process.env.APPDATA + "\\LauncherPAH\\installations");
+        return undefined;
+    }
+}
+
+const defaultData: ILocalData = {
+    file_version: 0,
+    settings: {
+        installDrive: "C",
+    },
+    installed_versions: [],
+};
+
+let localData: ILocalData | undefined = undefined;
+
+const localDataString = tryReadLocalData();
+if (localDataString !== undefined) {
+    localData = JSON.parse(localDataString) as ILocalData;
+}
+
+if (localData === undefined) {
+    localData = defaultData;
+    fs.writeFileSync(process.env.APPDATA + "\\LauncherPAH\\data\\local_data.json", JSON.stringify(localData, null, 4));
+}
+
+function pushNewVersion(version: ILocalVersion) {
+    for (const installedVersion of localData.installed_versions) {
+        if (installedVersion.name === version.name) return;
+    }
+    localData.installed_versions.push(version);
+    fs.writeFileSync(process.env.APPDATA + "\\LauncherPAH\\data\\local_data.json", JSON.stringify(localData, null, 4));
+}
+
+function isVersionInstalled(name: string): boolean {
+    for (const installedVersion of localData.installed_versions) {
+        if (installedVersion.name.endsWith(name)) return true;
+    }
+    return false;
+}
+
+const drive = localData.settings.installDrive;
+const installationsLocation = launcherLocation + "\\installations";
+const defaultPreviewLocation = drive + ":\\XboxGames\\Minecraft Preview for Windows\\Content\\";
+const defaultReleaseLocation = drive + ":\\XboxGames\\Minecraft for Windows\\Content\\";
+
+function moveExecutable(targetLocation: string, previewLocation: string): string {
+    const packageName = previewLocation.includes("Preview") ? "Microsoft.MinecraftWindowsBeta_8wekyb3d8bbwe" : "Microsoft.MinecraftUWP_8wekyb3d8bbwe";
+    return `Invoke-CommandInDesktopPackage -PackageFamilyName "${packageName}" -app Game -Command "powershell" -Args "-Command Copy-Item '${previewLocation}Minecraft.Windows.exe' '${installationsLocation}\\${targetLocation}'";`;;
+}
+
 async function mainDownload(_: Electron.IpcMainEvent, info: IDownloadProgressInfo) {
     const window = BrowserWindow.getFocusedWindow();
     window.webContents.send("startDownload", true);
-    await download(window, info.url, {
-        directory: process.cwd() + "/data",
-        onProgress(progress) {
-            window.webContents.send("downloadProgress", progress);
-        },
-        onCompleted(_) {
-            window.webContents.send("downloadCompleted", undefined);
-        },
-    });
+    let filePath: string | undefined = undefined;
+
+    const versionNameRegex = /[^\/]*.msixvc$/;
+    const versionName = info.url.match(versionNameRegex)[0].replace(".msixvc", "");
+
+    if (isVersionInstalled(versionName)) {
+        window.webContents.send("progressStage", "register");
+        await run(`wdapp register "${installationsLocation}\\${versionName}"`);
+        await execAsync("start minecraft-preview://");
+        window.webContents.send("progressStage", "idle");
+        return;
+    }
+
+    if (!fs.existsSync(process.cwd() + "\\data\\" + versionName + ".msixvc")) {
+        await download(window, info.url, {
+            directory: process.cwd() + "\\data",
+            onProgress(progress) {
+                window.webContents.send("downloadProgress", progress);
+            },
+            onCompleted(file) {
+                filePath = file.path;
+                window.webContents.send("downloadCompleted", undefined);
+            },
+        });
+        if (filePath === undefined) return;
+    } else {
+        filePath = process.cwd() + "\\data\\" + versionName + ".msixvc";
+    }
+
+    const isBeta = versionName.includes("MinecraftWindowsBeta");
+
+    await install(filePath, window, isBeta);
 }
 
-const file = "D:\\Projects\\LauncherPAH\\data\\Microsoft.MinecraftWindowsBeta_1.21.12021.0_x64__8wekyb3d8bbwe.msixvc";
-const versionNameRegex = /[^\\]*.msixvc$/;
-const versionName = file.match(versionNameRegex)[0].replace(".msixvc", "");
-const drive = "D";
-const launcherLocation = "D:\\LauncherPAH";
-const installationsLocation = launcherLocation + "\\installations";
-const defaultPreviewLocation = drive + ":\\XboxGames\\Minecraft Preview for Windows\\Content\\";
-function moveExecutableCommand(targetLocation: string): string {
-    return `Invoke-CommandInDesktopPackage -PackageFamilyName "Microsoft.MinecraftWindowsBeta_8wekyb3d8bbwe" -app Game -Command "powershell" -Args "-Command Copy-Item '${defaultPreviewLocation}Minecraft.Windows.exe' '${installationsLocation}\\${targetLocation}'"`;
+async function registerDev(file: string, previewLocation: string) {
+    await run(`wdapp install /drive=${drive} "${file}"`);
+    // Sometimes registration fails for whatever reason. Just keep retrying until it succeeds.
+    if (!fs.existsSync(previewLocation)) await registerDev(file, previewLocation);
+    await run(`Add-AppxPackage "${file}" -Volume '${drive}:\\XboxGames'`);
 }
-const removeAppxCommand = `Remove-AppxPackage -Package ${versionName}`;
 
-async function install(_: Electron.IpcMainEvent) {
-    await run(`Add-AppxPackage "${file}" -Volume ${drive}`);
+async function register(file: string, previewLocation: string) {
+    await run(`Add-AppxPackage "${file}" -Volume '${drive}:\\XboxGames'`);
+    // Sometimes registration fails for whatever reason. Just keep retrying until it succeeds.
+    if (!fs.existsSync(previewLocation)) await register(file, previewLocation);
+}
+
+async function install(file: string, window: Electron.BrowserWindow, isBeta: boolean, sideloaded = false) {
+    const versionNameRegex = /[^\\]*.msixvc$/;
+    const versionName = file.match(versionNameRegex)[0].replace(".msixvc", "");
+    const removeAppxCommand = `Remove-AppxPackage -Package ${versionName}`;
+
+    const defaultLocation = isBeta ? defaultPreviewLocation : defaultReleaseLocation;
+
+    if (sideloaded) await registerDev(file, defaultLocation);
+    else await register(file, defaultLocation);
+
+    window.webContents.send("progressStage", "copy");
 
     const targetLocation = installationsLocation + "\\" + versionName;
     if (!fs.existsSync(targetLocation)) fs.mkdirSync(targetLocation);
-    fs.cpSync(defaultPreviewLocation, targetLocation, {
+
+    await fsAsync.cp(defaultLocation, targetLocation, {
+        recursive: true,
         filter(source) {
-            if (source.endsWith("Minecraft.Windows.exe")) return false;
+            if (source.endsWith(".exe")) return false;
             return true;
         },
-        recursive: true,
     });
-    console.log(moveExecutableCommand(versionName));
-    await run(moveExecutableCommand(versionName));
+
+
+    await run(moveExecutable(versionName, defaultLocation));
+    window.webContents.send("progressStage", "unregister");
     await run(removeAppxCommand);
+    window.webContents.send("progressStage", "cleanup");
+    if (!sideloaded) await fsAsync.rm(file);
+    pushNewVersion({ name: versionName, path: targetLocation });
+    window.webContents.send("progressStage", "register");
+    await run(`wdapp register "${targetLocation}"`);
+    window.webContents.send("progressStage", "idle");
+    if (isBeta) await execAsync("start minecraft-preview://");
+    else await execAsync("start minecraft://");
 }

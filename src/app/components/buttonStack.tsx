@@ -26,10 +26,14 @@ export default function ButtonStack() {
                         {version.version}
                     </Button>
                 ))}
-                <Button key="test" variant="outlined" onClick={() => {
-                    window.electronAPI.send("install", {})
-                }}>
-                    {"Install"}
+                <Button
+                    key="custom"
+                    variant="outlined"
+                    onClick={() => {
+                        window.electronAPI.send("filePick", {});
+                    }}
+                >
+                    {"Pick Custom Build"}
                 </Button>
             </Stack>
             <div style={{ width: 0, height: "1rem" }}></div>

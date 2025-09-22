@@ -17,26 +17,47 @@ function LinearProgressWithLabel(props: LinearProgressProps & { value: number })
     );
 }
 
-export let downloadProgressVisibility = false;
-
 export default function LinearWithValueLabel() {
     const [progress, setProgress] = React.useState(0);
+    const [stage, setStage] = React.useState("idle");
+    const [downloadProgressVisibility, setDownloadProgressVisibility] = React.useState(false);
+    const [appxExtractProgressVisibility, setAppxExtractProgressVisibility] = React.useState(false);
 
     React.useEffect(() => {
         window.electronAPI.on("downloadProgress", (progress: Progress) => {
-            downloadProgressVisibility = true;
             setProgress(progress.percent * 100);
+            setDownloadProgressVisibility(true);
         });
-        window.electronAPI.on("downloadCompleted", (_) => {
-            downloadProgressVisibility = false;
+        window.electronAPI.on("downloadCompleted", () => {
             setProgress(progress);
+            setDownloadProgressVisibility(false);
+            setAppxExtractProgressVisibility(true);
+        });
+        window.electronAPI.on("progressStage", (state: string) => {
+            if (state === "idle") setAppxExtractProgressVisibility(false);
+            setStage(state);
         });
     }, []);
 
     if (downloadProgressVisibility) {
         return (
             <Box sx={{ width: "100%" }}>
+                <Typography sx={{ color: "white" }}>Downloading...</Typography>
                 <LinearProgressWithLabel value={progress} />
+            </Box>
+        );
+    } else if (appxExtractProgressVisibility && stage === "idle") {
+        return (
+            <Box sx={{ width: "100%" }}>
+                <Typography sx={{ color: "white" }}>Extracting files. This will take a few minutes.</Typography>
+                <LinearProgress />
+            </Box>
+        );
+    } else if (appxExtractProgressVisibility && stage !== "idle") {
+        return (
+            <Box sx={{ width: "100%" }}>
+                <Typography sx={{ color: "white" }}>{stage}</Typography>
+                <LinearProgress />
             </Box>
         );
     }
