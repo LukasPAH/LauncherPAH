@@ -8,6 +8,10 @@
         {
             "version": "Preview 1.21.120.22",
             "url": "http://assets1.xboxlive.com/14/b058fc9d-ce41-4d43-86a3-97d8690ab0b4/98bd2335-9b01-4e4c-bd05-ccc01614078b/1.21.12022.0.bd8e701d-78fe-44ae-bb25-f15ac0001754/Microsoft.MinecraftWindowsBeta_1.21.12022.0_x64__8wekyb3d8bbwe.msixvc"
+        },
+        {
+            "version": "Preview 1.21.120.23",
+            "url": "http://assets1.xboxlive.com/4/c21d7589-ffaf-4544-b1c5-926d72752e6c/98bd2335-9b01-4e4c-bd05-ccc01614078b/1.21.12023.0.9f1b49ff-7011-4af2-bb8c-edc1de4b41df/Microsoft.MinecraftWindowsBeta_1.21.12023.0_x64__8wekyb3d8bbwe.msixvc"
         }
     ]
 }

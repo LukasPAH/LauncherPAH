@@ -134,10 +134,12 @@ const drive = localData.settings.installDrive;
 const installationsLocation = launcherLocation + "\\installations";
 const defaultPreviewLocation = drive + ":\\XboxGames\\Minecraft Preview for Windows\\Content\\";
 const defaultReleaseLocation = drive + ":\\XboxGames\\Minecraft for Windows\\Content\\";
+const releasePackageName = "Microsoft.MinecraftUWP";
+const previewPackageName = "Microsoft.MinecraftWindowsBeta";
 
 function moveExecutable(targetLocation: string, previewLocation: string): string {
     const packageName = previewLocation.includes("Preview") ? "Microsoft.MinecraftWindowsBeta_8wekyb3d8bbwe" : "Microsoft.MinecraftUWP_8wekyb3d8bbwe";
-    return `Invoke-CommandInDesktopPackage -PackageFamilyName "${packageName}" -app Game -Command "powershell" -Args "-Command Copy-Item '${previewLocation}Minecraft.Windows.exe' '${installationsLocation}\\${targetLocation}'";`;;
+    return `Invoke-CommandInDesktopPackage -PackageFamilyName "${packageName}" -app Game -Command "powershell" -Args "-Command Copy-Item '${previewLocation}Minecraft.Windows.exe' '${installationsLocation}\\${targetLocation}'";`;
 }
 
 async function mainDownload(_: Electron.IpcMainEvent, info: IDownloadProgressInfo) {
@@ -178,10 +180,11 @@ async function mainDownload(_: Electron.IpcMainEvent, info: IDownloadProgressInf
 }
 
 async function registerDev(file: string, previewLocation: string) {
-    await run(`wdapp install /drive=${drive} "${file}"`);
+    try {
+        await run(`wdapp install /drive=${drive} "${file}"`);
+    } catch {}
     // Sometimes registration fails for whatever reason. Just keep retrying until it succeeds.
-    if (!fs.existsSync(previewLocation)) await registerDev(file, previewLocation);
-    await run(`Add-AppxPackage "${file}" -Volume '${drive}:\\XboxGames'`);
+    await register(file, previewLocation);
 }
 
 async function register(file: string, previewLocation: string) {
@@ -196,6 +199,11 @@ async function install(file: string, window: Electron.BrowserWindow, isBeta: boo
     const removeAppxCommand = `Remove-AppxPackage -Package ${versionName}`;
 
     const defaultLocation = isBeta ? defaultPreviewLocation : defaultReleaseLocation;
+
+    try {
+        const command = `$name = (Get-AppxPackage -Name "${isBeta ? previewPackageName : releasePackageName}").PackageFullName; wdapp unregister $name;`;
+        await run(command);
+    } catch {}
 
     if (sideloaded) await registerDev(file, defaultLocation);
     else await register(file, defaultLocation);
@@ -212,7 +220,6 @@ async function install(file: string, window: Electron.BrowserWindow, isBeta: boo
             return true;
         },
     });
-
 
     await run(moveExecutable(versionName, defaultLocation));
     window.webContents.send("progressStage", "unregister");
