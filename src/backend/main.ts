@@ -1,11 +1,10 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
 import { download } from "electron-dl";
 import { execAsync, run } from "./powershell";
 import fs from "fs";
 import * as fsAsync from "fs/promises";
-import { dialog } from "electron";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -42,8 +41,10 @@ const createWindow = () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", () => {
+app.on("ready", async () => {
     createWindow();
+    const installedVersions = await readInstalledVersions();
+    console.log(installedVersions);
     ipcMain.on("download", mainDownload);
     ipcMain.on("filePick", pickFile);
 });
@@ -69,6 +70,27 @@ app.on("activate", () => {
 // code. You can also put them in separate files and import them here.
 
 const launcherLocation = process.env.APPDATA + "\\LauncherPAH";
+
+async function readInstalledVersions(): Promise<string[]> {
+    const installedVersions: string[] = [];
+
+    const installLocation = launcherLocation + "\\installations";
+
+    const installations = await fsAsync.readdir(installLocation, { recursive: false });
+
+    installations.forEach((installation) => {
+        if (fs.existsSync(installLocation + "\\" + installation + "\\Minecraft.Windows.exe")) installedVersions.push(prettifyVersionNumbers(installation));
+    });
+
+    return installedVersions;
+}
+
+function prettifyVersionNumbers(version: string): string {
+    version = version.replace("Microsoft.MinecraftUWP_", "").replace("Microsoft.MinecraftWindowsBeta_", "").replace(".0_x64__8wekyb3d8bbwe", "");
+    const majorVersion = version.slice(0, -2);
+    const minorVersion = version.slice(-2);
+    return majorVersion + "." + minorVersion;
+}
 
 async function pickFile() {
     const window = BrowserWindow.getFocusedWindow();
@@ -147,7 +169,7 @@ async function mainDownload(_: Electron.IpcMainEvent, info: IDownloadProgressInf
     window.webContents.send("startDownload", true);
     let filePath: string | undefined = undefined;
 
-    const versionNameRegex = /[^\/]*.msixvc$/;
+    const versionNameRegex = /[^/]*.msixvc$/;
     const versionName = info.url.match(versionNameRegex)[0].replace(".msixvc", "");
 
     if (isVersionInstalled(versionName)) {
@@ -182,18 +204,22 @@ async function mainDownload(_: Electron.IpcMainEvent, info: IDownloadProgressInf
 async function registerDev(file: string, previewLocation: string) {
     try {
         await run(`wdapp install /drive=${drive} "${file}"`);
-    } catch {}
+    } catch (e) {
+        console.log(e);
+    }
     // Sometimes registration fails for whatever reason. Just keep retrying until it succeeds.
     await register(file, previewLocation);
 }
 
 async function register(file: string, previewLocation: string) {
+    console.log(file);
     await run(`Add-AppxPackage "${file}" -Volume '${drive}:\\XboxGames'`);
     // Sometimes registration fails for whatever reason. Just keep retrying until it succeeds.
     if (!fs.existsSync(previewLocation)) await register(file, previewLocation);
 }
 
 async function install(file: string, window: Electron.BrowserWindow, isBeta: boolean, sideloaded = false) {
+    console.log(sideloaded);
     const versionNameRegex = /[^\\]*.msixvc$/;
     const versionName = file.match(versionNameRegex)[0].replace(".msixvc", "");
     const removeAppxCommand = `Remove-AppxPackage -Package ${versionName}`;
@@ -203,7 +229,9 @@ async function install(file: string, window: Electron.BrowserWindow, isBeta: boo
     try {
         const command = `$name = (Get-AppxPackage -Name "${isBeta ? previewPackageName : releasePackageName}").PackageFullName; wdapp unregister $name;`;
         await run(command);
-    } catch {}
+    } catch (e) {
+        console.log(e);
+    }
 
     if (sideloaded) await registerDev(file, defaultLocation);
     else await register(file, defaultLocation);
