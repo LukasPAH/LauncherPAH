@@ -1,7 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import ButtonStack from "./components/buttonStack";
-
+import MainWindow from "./components/mainWindow";
 
 const root = createRoot(document.body);
-root.render(<ButtonStack />);
+root.render(<MainWindow />);

@@ -11,7 +11,7 @@ if (started) {
     app.quit();
 }
 
-const createWindow = () => {
+const createWindow = async () => {
     // Create the browser window.
     const mainWindow = new BrowserWindow({
         width: 800,
@@ -34,17 +34,22 @@ const createWindow = () => {
         mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
     }
 
+    mainWindow.webContents.openDevTools();
+
     // Center the window.
     mainWindow.center();
+
+    return mainWindow;
 };
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", async () => {
-    createWindow();
-    const installedVersions = await readInstalledVersions();
-    console.log(installedVersions);
+    await createWindow();
+    ipcMain.on("readVersions", async () => {
+        await readInstalledVersions();
+    });
     ipcMain.on("download", mainDownload);
     ipcMain.on("filePick", pickFile);
 });
@@ -64,6 +69,10 @@ app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         createWindow();
     }
+    // There can only be one.
+    if (BrowserWindow.getAllWindows().length === 1) {
+        app.quit();
+    }
 });
 
 // In this file you can include the rest of your app's specific main process
@@ -71,7 +80,9 @@ app.on("activate", () => {
 
 const launcherLocation = process.env.APPDATA + "\\LauncherPAH";
 
-async function readInstalledVersions(): Promise<string[]> {
+async function readInstalledVersions(): Promise<void> {
+    const window = BrowserWindow.getAllWindows()[0];
+
     const installedVersions: string[] = [];
 
     const installLocation = launcherLocation + "\\installations";
@@ -82,18 +93,20 @@ async function readInstalledVersions(): Promise<string[]> {
         if (fs.existsSync(installLocation + "\\" + installation + "\\Minecraft.Windows.exe")) installedVersions.push(prettifyVersionNumbers(installation));
     });
 
-    return installedVersions;
+    console.log(installedVersions);
+
+    window.webContents.send("installedVersions", installedVersions);
 }
 
 function prettifyVersionNumbers(version: string): string {
-    version = version.replace("Microsoft.MinecraftUWP_", "").replace("Microsoft.MinecraftWindowsBeta_", "").replace(".0_x64__8wekyb3d8bbwe", "");
+    version = version.toLowerCase().replace("microsoft.minecraftuwp_", "").replace("microsoft.minecraftwindowsbeta_", "").replace(".0_x64__8wekyb3d8bbwe", "");
     const majorVersion = version.slice(0, -2);
     const minorVersion = version.slice(-2);
     return majorVersion + "." + minorVersion;
 }
 
 async function pickFile() {
-    const window = BrowserWindow.getFocusedWindow();
+    const window = BrowserWindow.getAllWindows()[0];
 
     const chosenFiles = await dialog.showOpenDialog(null, { properties: ["openFile"], title: "Open Custom MSIXVC", filters: [{ extensions: ["msixvc"], name: "" }] });
     const chosenFile = chosenFiles.filePaths[0];
@@ -165,7 +178,7 @@ function moveExecutable(targetLocation: string, previewLocation: string): string
 }
 
 async function mainDownload(_: Electron.IpcMainEvent, info: IDownloadProgressInfo) {
-    const window = BrowserWindow.getFocusedWindow();
+    const window = BrowserWindow.getAllWindows()[0];
     window.webContents.send("startDownload", true);
     let filePath: string | undefined = undefined;
 
