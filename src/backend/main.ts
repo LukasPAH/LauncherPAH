@@ -2,9 +2,11 @@ import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
 import { download } from "electron-dl";
-import { execAsync, run } from "./powershell";
+import { run } from "./powershell";
 import fs from "fs";
 import * as fsAsync from "fs/promises";
+import * as consts from "./consts";
+import { moveExecutable } from "./move";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -78,14 +80,12 @@ app.on("activate", () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 
-const launcherLocation = process.env.APPDATA + "\\LauncherPAH";
-
 async function readInstalledVersions(): Promise<void> {
     const window = BrowserWindow.getAllWindows()[0];
 
     const installedVersions: string[] = [];
 
-    const installLocation = launcherLocation + "\\installations";
+    const installLocation = consts.launcherLocation + "\\installations";
 
     const installations = await fsAsync.readdir(installLocation, { recursive: false });
 
@@ -93,13 +93,11 @@ async function readInstalledVersions(): Promise<void> {
         if (fs.existsSync(installLocation + "\\" + installation + "\\Minecraft.Windows.exe")) installedVersions.push(prettifyVersionNumbers(installation));
     });
 
-    console.log(installedVersions);
-
     window.webContents.send("installedVersions", installedVersions);
 }
 
 function prettifyVersionNumbers(version: string): string {
-    version = version.toLowerCase().replace("microsoft.minecraftuwp_", "").replace("microsoft.minecraftwindowsbeta_", "").replace(".0_x64__8wekyb3d8bbwe", "");
+    version = version.toLowerCase().replace("microsoft.minecraftuwp_", "").replace("microsoft.minecraftwindowsbeta_", "").replace(".0_x64__8wekyb3d8bbwe", "").replace("_sideloaded", "");
     const majorVersion = version.slice(0, -2);
     const minorVersion = version.slice(-2);
     return majorVersion + "." + minorVersion;
@@ -113,68 +111,17 @@ async function pickFile() {
     if (chosenFile === undefined || chosenFile === null) return;
     if (!chosenFile.endsWith(".msixvc")) return;
 
-    const isBeta = chosenFile.includes("MinecraftWindowsBeta");
+    const isBeta = chosenFile.toLowerCase().includes("minecraftwindowsbeta");
 
+    window.webContents.send("downloadCompleted", undefined);
     await install(chosenFile, window, isBeta, true);
 }
 
-function tryReadLocalData(): string | undefined {
-    try {
-        const contents = fs.readFileSync(process.env.APPDATA + "\\LauncherPAH\\data\\local_data.json").toString();
-        return contents;
-    } catch {
-        if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH")) fs.mkdirSync(process.env.APPDATA + "\\LauncherPAH");
-        if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH\\data")) fs.mkdirSync(process.env.APPDATA + "\\LauncherPAH\\data");
-        if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH\\installations")) fs.mkdirSync(process.env.APPDATA + "\\LauncherPAH\\installations");
-        return undefined;
-    }
-}
-
-const defaultData: ILocalData = {
-    file_version: 0,
-    settings: {
-        installDrive: "C",
-    },
-    installed_versions: [],
-};
-
-let localData: ILocalData | undefined = undefined;
-
-const localDataString = tryReadLocalData();
-if (localDataString !== undefined) {
-    localData = JSON.parse(localDataString) as ILocalData;
-}
-
-if (localData === undefined) {
-    localData = defaultData;
-    fs.writeFileSync(process.env.APPDATA + "\\LauncherPAH\\data\\local_data.json", JSON.stringify(localData, null, 4));
-}
-
-function pushNewVersion(version: ILocalVersion) {
-    for (const installedVersion of localData.installed_versions) {
-        if (installedVersion.name === version.name) return;
-    }
-    localData.installed_versions.push(version);
-    fs.writeFileSync(process.env.APPDATA + "\\LauncherPAH\\data\\local_data.json", JSON.stringify(localData, null, 4));
-}
-
 function isVersionInstalled(name: string): boolean {
-    for (const installedVersion of localData.installed_versions) {
+    for (const installedVersion of consts.localData.installed_versions) {
         if (installedVersion.name.endsWith(name)) return true;
     }
     return false;
-}
-
-const drive = localData.settings.installDrive;
-const installationsLocation = launcherLocation + "\\installations";
-const defaultPreviewLocation = drive + ":\\XboxGames\\Minecraft Preview for Windows\\Content\\";
-const defaultReleaseLocation = drive + ":\\XboxGames\\Minecraft for Windows\\Content\\";
-const releasePackageName = "Microsoft.MinecraftUWP";
-const previewPackageName = "Microsoft.MinecraftWindowsBeta";
-
-function moveExecutable(targetLocation: string, previewLocation: string): string {
-    const packageName = previewLocation.includes("Preview") ? "Microsoft.MinecraftWindowsBeta_8wekyb3d8bbwe" : "Microsoft.MinecraftUWP_8wekyb3d8bbwe";
-    return `Invoke-CommandInDesktopPackage -PackageFamilyName "${packageName}" -app Game -Command "powershell" -Args "-Command Copy-Item '${previewLocation}Minecraft.Windows.exe' '${installationsLocation}\\${targetLocation}'";`;
 }
 
 async function mainDownload(_: Electron.IpcMainEvent, info: IDownloadProgressInfo) {
@@ -186,10 +133,6 @@ async function mainDownload(_: Electron.IpcMainEvent, info: IDownloadProgressInf
     const versionName = info.url.match(versionNameRegex)[0].replace(".msixvc", "");
 
     if (isVersionInstalled(versionName)) {
-        window.webContents.send("progressStage", "register");
-        await run(`wdapp register "${installationsLocation}\\${versionName}"`);
-        await execAsync("start minecraft-preview://");
-        window.webContents.send("progressStage", "idle");
         return;
     }
 
@@ -214,63 +157,54 @@ async function mainDownload(_: Electron.IpcMainEvent, info: IDownloadProgressInf
     await install(filePath, window, isBeta);
 }
 
-async function registerDev(file: string, previewLocation: string) {
-    try {
-        await run(`wdapp install /drive=${drive} "${file}"`);
-    } catch (e) {
-        console.log(e);
-    }
-    // Sometimes registration fails for whatever reason. Just keep retrying until it succeeds.
-    await register(file, previewLocation);
-}
-
 async function register(file: string, previewLocation: string) {
-    console.log(file);
-    await run(`Add-AppxPackage "${file}" -Volume '${drive}:\\XboxGames'`);
+    await run(`Add-AppxPackage "${file}" -Volume '${consts.drive}:\\XboxGames'`);
     // Sometimes registration fails for whatever reason. Just keep retrying until it succeeds.
     if (!fs.existsSync(previewLocation)) await register(file, previewLocation);
 }
 
+function pushNewVersion(version: ILocalVersion) {
+    for (const installedVersion of consts.localData.installed_versions) {
+        if (installedVersion.name === version.name) return;
+    }
+    consts.localData.installed_versions.push(version);
+    fs.writeFileSync(process.env.APPDATA + "\\LauncherPAH\\data\\local_data.json", JSON.stringify(consts.localData, null, 4));
+}
+
 async function install(file: string, window: Electron.BrowserWindow, isBeta: boolean, sideloaded = false) {
-    console.log(sideloaded);
     const versionNameRegex = /[^\\]*.msixvc$/;
     const versionName = file.match(versionNameRegex)[0].replace(".msixvc", "");
-    const removeAppxCommand = `Remove-AppxPackage -Package ${versionName}`;
+    const removeAppxCommand = `$name = (Get-AppxPackage -Name "${isBeta ? consts.previewPackageName : consts.releasePackageName}").PackageFullName; Remove-AppxPackage -Package $name;`;
 
-    const defaultLocation = isBeta ? defaultPreviewLocation : defaultReleaseLocation;
+    const defaultLocation = isBeta ? consts.defaultPreviewLocation : consts.defaultReleaseLocation;
 
     try {
-        const command = `$name = (Get-AppxPackage -Name "${isBeta ? previewPackageName : releasePackageName}").PackageFullName; wdapp unregister $name;`;
-        await run(command);
+        await run(removeAppxCommand);
     } catch (e) {
-        console.log(e);
+        //
     }
 
-    if (sideloaded) await registerDev(file, defaultLocation);
-    else await register(file, defaultLocation);
+    await register(file, defaultLocation);
 
     window.webContents.send("progressStage", "copy");
 
-    const targetLocation = installationsLocation + "\\" + versionName;
-    if (!fs.existsSync(targetLocation)) fs.mkdirSync(targetLocation);
+    const targetLocation = consts.installationsLocation + "\\" + versionName + (sideloaded ? "_sideloaded" : "" );
+    if (!fs.existsSync(targetLocation)) await fsAsync.mkdir(targetLocation);
 
-    await fsAsync.cp(defaultLocation, targetLocation, {
-        recursive: true,
-        filter(source) {
-            if (source.endsWith(".exe")) return false;
-            return true;
-        },
-    });
+    // Move the executable first.
+    await run(moveExecutable(defaultLocation, targetLocation));
 
-    await run(moveExecutable(versionName, defaultLocation));
+    // Node JS' copy and delete is too slow, opt for Windows' built in robocopy
+    try {
+        await run(`robocopy "${defaultLocation}" "${targetLocation}" /XF *.exe appxmanifest.xml /E /MOVE /MT:4 /R:3 /W:5 /NFL /NDL`);
+    } catch {
+        //
+    }
+
     window.webContents.send("progressStage", "unregister");
     await run(removeAppxCommand);
     window.webContents.send("progressStage", "cleanup");
     if (!sideloaded) await fsAsync.rm(file);
     pushNewVersion({ name: versionName, path: targetLocation });
-    window.webContents.send("progressStage", "register");
-    await run(`wdapp register "${targetLocation}"`);
     window.webContents.send("progressStage", "idle");
-    if (isBeta) await execAsync("start minecraft-preview://");
-    else await execAsync("start minecraft://");
 }
