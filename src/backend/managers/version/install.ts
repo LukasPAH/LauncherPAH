@@ -2,7 +2,7 @@ import * as consts from "../../consts";
 import * as fsAsync from "fs/promises";
 import fs from "fs";
 import { run } from "../../utils/powershell";
-import { moveExecutable } from "../../utils/move";
+import { moveFontMetadataFile, moveExecutable } from "../../utils/move";
 import { readInstalledVersions } from "./readVersions";
 import { launchVersion } from "../../events/responses/launchVersion";
 
@@ -31,10 +31,12 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
 
     // Node JS' copy and delete is too slow, opt for Windows' built in robocopy
     try {
-        await run(`robocopy "${defaultLocation}" "${targetLocation}" /XF *.exe appxmanifest.xml /E /MOVE /MT:4 /R:3 /W:5 /NFL /NDL`);
+        await run(`robocopy "${defaultLocation}" "${targetLocation}" /XF *.exe appxmanifest.xml font_metadata.json /E /MOVE /MT:4 /R:3 /W:5 /NFL /NDL`);
     } catch {
         //
     }
+
+    await moveFontMetadataFile(defaultLocation, targetLocation);
 
     window.webContents.send("progressStage", "Unregistering package...");
     await run(removeAppxCommand);
