@@ -8,7 +8,7 @@ interface IHomepageProps {
 }
 
 function callbackFunction(index: number) {
-    console.log(index);
+    window.electronAPI.send("launchInstalledVersion", index);
 }
 
 export default function HomePage(props: IHomepageProps) {

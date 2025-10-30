@@ -3,22 +3,26 @@ import { download } from "electron-dl";
 import fs from "fs";
 import { isVersionInstalled } from "../../managers/version/readVersions";
 import { install } from "../../managers/version/install";
+import { getBackendVersionDB } from "../../managers/version/availableVersions";
 
-export async function downloadVersion(_: Electron.IpcMainEvent, info: IDownloadProgressInfo) {
+export async function downloadVersion(DBIndex: number) {
     const window = BrowserWindow.getAllWindows()[0];
     window.webContents.send("startDownload", true);
     let filePath: string | undefined = undefined;
 
+    const versionDB = getBackendVersionDB();
+    const url = versionDB[DBIndex][0];
+
     const versionNameRegex = /[^/]*.msixvc$/;
-    const versionName = info.url.match(versionNameRegex)[0].replace(".msixvc", "");
+    const versionName = url.match(versionNameRegex)[0].replace(".msixvc", "");
 
     if (isVersionInstalled(versionName)) {
         return;
     }
 
-    if (!fs.existsSync(process.cwd() + "\\data\\" + versionName + ".msixvc")) {
-        await download(window, info.url, {
-            directory: process.cwd() + "\\data",
+    if (!fs.existsSync(process.cwd() + "\\tmp_download\\" + versionName + ".msixvc")) {
+        await download(window, url, {
+            directory: process.cwd() + "\\tmp_download",
             onProgress(progress) {
                 window.webContents.send("downloadProgress", progress);
             },
@@ -29,10 +33,10 @@ export async function downloadVersion(_: Electron.IpcMainEvent, info: IDownloadP
         });
         if (filePath === undefined) return;
     } else {
-        filePath = process.cwd() + "\\data\\" + versionName + ".msixvc";
+        filePath = process.cwd() + "\\tmp_download\\" + versionName + ".msixvc";
     }
 
-    const isBeta = versionName.includes("MinecraftWindowsBeta");
+    const isBeta = versionName.toLowerCase().includes("minecraftwindowsbeta");
 
     await install(filePath, window, isBeta);
 }

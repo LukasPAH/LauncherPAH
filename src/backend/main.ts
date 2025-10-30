@@ -3,8 +3,9 @@ import path from "node:path";
 import started from "electron-squirrel-startup";
 import { readInstalledVersions } from "./managers/version/readVersions";
 import { downloadVersion } from "./events/responses/downloadVersion";
-import { getAvailableVersions } from "./managers/version/getAvailableVersions";
+import { getAvailableVersions } from "./managers/version/availableVersions";
 import { pickFile } from "./events/responses/pickFile";
+import { launchInstalledVersion } from "./events/responses/launchVersion";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -51,7 +52,12 @@ app.on("ready", async () => {
         await readInstalledVersions();
         await getAvailableVersions();
     });
-    ipcMain.on("download", downloadVersion);
+    ipcMain.on("launchInstalledVersion", (_, index: number) => {
+        launchInstalledVersion(index);
+    });
+    ipcMain.on("download", (_, index: number) => {
+        downloadVersion(index);
+    });
     ipcMain.on("filePick", pickFile);
 });
 

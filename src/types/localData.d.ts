@@ -2,15 +2,10 @@ type Drive = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "
 
 interface ISettings {
     installDrive: Drive;
-}
-
-interface ILocalVersion {
-    name: string;
-    path: string;
+    lastLaunchedVersion: false | string;
 }
 
 interface ILocalData {
     file_version: number;
     settings: ISettings;
-    installed_versions: ILocalVersion[];
 }

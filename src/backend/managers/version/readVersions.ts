@@ -3,20 +3,25 @@ import * as consts from "../../consts";
 import * as fsAsync from "fs/promises";
 import fs from "fs";
 
+const installLocation = consts.launcherLocation + "\\installations";
+
+const installedVersions: string[] = [];
+
 export async function readInstalledVersions(): Promise<void> {
     const window = BrowserWindow.getAllWindows()[0];
 
-    const installedVersions: string[] = [];
-
-    const installLocation = consts.launcherLocation + "\\installations";
-
     const installations = await fsAsync.readdir(installLocation, { recursive: false });
 
+    const installedVersionsForUI: string[] = [];
+
     installations.forEach((installation) => {
-        if (fs.existsSync(installLocation + "\\" + installation + "\\Minecraft.Windows.exe")) installedVersions.push(prettifyVersionNumbers(installation));
+        if (fs.existsSync(installLocation + "\\" + installation + "\\Minecraft.Windows.exe")) {
+            installedVersionsForUI.push(prettifyVersionNumbers(installation));
+            installedVersions.push(installation);
+        }
     });
 
-    window.webContents.send("installedVersions", installedVersions);
+    window.webContents.send("installedVersions", installedVersionsForUI);
 }
 
 function prettifyVersionNumbers(version: string): string {
@@ -27,8 +32,10 @@ function prettifyVersionNumbers(version: string): string {
 }
 
 export function isVersionInstalled(name: string): boolean {
-    for (const installedVersion of consts.localData.installed_versions) {
-        if (installedVersion.name.endsWith(name)) return true;
-    }
+    if (fs.existsSync(installLocation + "\\" + name + "\\Minecraft.Windows.exe")) return true;
     return false;
+}
+
+export function getInstalledVersions() {
+    return installedVersions;
 }
