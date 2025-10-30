@@ -22,7 +22,7 @@ function CustomTabPanel(props: TabPanelProps) {
 }
 
 window.addEventListener("load", () => {
-    window.electronAPI.send("readVersions", undefined);
+    window.electronAPI.send("UILoaded", undefined);
 });
 
 export default function BasicTabs() {
@@ -33,10 +33,14 @@ export default function BasicTabs() {
     };
 
     const [versions, setVersions] = React.useState([]) as [string[], React.Dispatch<React.SetStateAction<any[]>>];
+    const [availableVersions, setAvailableVersions] = React.useState([]) as [string[], React.Dispatch<React.SetStateAction<any[]>>];
 
     window.electronAPI.on("installedVersions", (versionsList: string[]) => {
         setVersions(versionsList);
     });
+    window.electronAPI.on("availableVersions", (versionsList: string[]) => {
+        setAvailableVersions(versionsList)
+    })
 
     return (
         <Box sx={{ width: "100%" }}>
@@ -51,7 +55,7 @@ export default function BasicTabs() {
                 <HomePage versions={versions} />
             </CustomTabPanel>
             <CustomTabPanel value={value} index={1}>
-                <ButtonStack />
+                <ButtonStack versions={availableVersions} />
             </CustomTabPanel>
             <CustomTabPanel value={value} index={2}>
                 Item Three

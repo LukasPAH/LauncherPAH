@@ -1,21 +1,21 @@
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import React from "react";
-import versionsJSON from "../../../data/historical_versions.json";
 import DownloadProgress from "./progress";
 
-function buttonClick(index: number) {
-    window.electronAPI.send("download", {
-        url: versionsJSON.versions[index].url,
-        properties: { directory: "../../data" },
-    } as IDownloadInfo);
+interface IButtonStackProps {
+    versions: string[]
 }
 
-export default function ButtonStack() {
+function buttonClick(index: number) {
+    window.electronAPI.send("download", index);
+}
+
+export default function ButtonStack(props: IButtonStackProps) {
     return (
         <div>
             <Stack spacing={2}>
-                {versionsJSON.versions.map((version, index) => (
+                {props.versions.map((version, index) => (
                     <Button
                         key={index}
                         variant="outlined"
@@ -23,7 +23,7 @@ export default function ButtonStack() {
                             buttonClick(index);
                         }}
                     >
-                        {version.version}
+                        {version}
                     </Button>
                 ))}
                 <Button

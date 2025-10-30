@@ -1,6 +1,7 @@
 interface IHistoricalVersionsJSON {
     file_version: number;
-    versions: IVersion[];
+    previewVersions: IVersion[],
+    releaseVersions: IVersion[]
 }
 
 interface IVersion {
