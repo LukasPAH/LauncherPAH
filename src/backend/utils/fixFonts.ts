@@ -8,7 +8,7 @@ export async function fixMinecraftTenFontMetadata(file: string) {
 
         if (font.version === undefined) {
             font.version = 2;
-            return;
+            break;
         }
 
         font.version = font.version + 1;
