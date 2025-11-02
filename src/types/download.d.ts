@@ -15,3 +15,8 @@ interface IDownloadInfo {
     properties: IDownloadProperties;
     url: string;
 }
+
+interface IURLFetchTimes {
+    time: number;
+    url: string;
+}

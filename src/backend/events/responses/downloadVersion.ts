@@ -11,7 +11,7 @@ export async function downloadVersion(DBIndex: number) {
     let filePath: string | undefined = undefined;
 
     const versionDB = getBackendVersionDB();
-    const url = versionDB[DBIndex][0];
+    const url = versionDB[DBIndex][0][0];
 
     const versionNameRegex = /[^/]*.msixvc$/;
     const versionName = url.match(versionNameRegex)[0].replace(".msixvc", "");
@@ -20,8 +20,26 @@ export async function downloadVersion(DBIndex: number) {
         return;
     }
 
+    const fetchTimes: IURLFetchTimes[] = [];
+
+    for (const urlToUse of versionDB[DBIndex][0]) {
+        const startTime = Date.now();
+        await fetch(urlToUse, {
+            method: "HEAD",
+        }).finally(() => {
+            const requestTime = Date.now() - startTime;
+            fetchTimes.push({ time: requestTime, url: urlToUse });
+        });
+    }
+
+    const sortedTimes = fetchTimes.sort((a, b) => {
+        return a.time - b.time;
+    });
+
+    const urlToUse = sortedTimes[0].url;
+
     if (!fs.existsSync(process.cwd() + "\\tmp_download\\" + versionName + ".msixvc")) {
-        await download(window, url, {
+        await download(window, urlToUse, {
             directory: process.cwd() + "\\tmp_download",
             onProgress(progress) {
                 window.webContents.send("downloadProgress", progress);

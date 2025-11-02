@@ -2,7 +2,7 @@ import { BrowserWindow } from "electron";
 
 const versionDB = "https://raw.githubusercontent.com/LukasPAH/minecraft-windows-gdk-version-db/refs/heads/main/historical_versions.json";
 
-let backendVersionDB: [string, string][] = [];
+let backendVersionDB: [string[], string][] = [];
 
 // @remarks Gets the version database. [url, version name]
 export function getBackendVersionDB() {
@@ -26,11 +26,11 @@ export async function getAvailableVersions() {
         backendVersionDB = [];
         for (const previewVersions of jsonData.previewVersions) {
             versionNamesForUI.push(previewVersions.version);
-            backendVersionDB.push([previewVersions.url, previewVersions.version]);
+            backendVersionDB.push([previewVersions.urls, previewVersions.version]);
         }
         for (const releaseVersion of jsonData.releaseVersions) {
             versionNamesForUI.push(releaseVersion.version);
-            backendVersionDB.push([releaseVersion.url, releaseVersion.version]);
+            backendVersionDB.push([releaseVersion.urls, releaseVersion.version]);
         }
 
         window.webContents.send("availableVersions", versionNamesForUI);

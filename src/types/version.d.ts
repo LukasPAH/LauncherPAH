@@ -6,5 +6,5 @@ interface IHistoricalVersionsJSON {
 
 interface IVersion {
     version: string;
-    url: string;
+    urls: string[];
 }
