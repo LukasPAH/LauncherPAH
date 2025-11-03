@@ -44,11 +44,11 @@ export default function HomePage(props: IHomepageProps) {
                     <Box component="img" sx={{ height: "130px", width: "397.333px", align: "" }} draggable={false} src="../../../images/edition_logo.png"></Box>
                 </Box>
             </Box>
-            <Box sx={{ position: "fixed", bottom: "2rem", left: "1rem", width: "40%", zIndex: 2 }}>
+            <Box sx={{ position: "fixed", bottom: "4rem", left: "1rem", width: "40%", zIndex: 2 }}>
                 <DropDown versions={props.versions} callback={selectVersion} enableNewButton={true} newButtonCallback={openAvailableVersions} />
             </Box>
             {props.selectedVersion !== "" && (
-                <Box sx={{ position: "fixed", bottom: "2rem", left: 0, width: "100%" }}>
+                <Box sx={{ position: "fixed", bottom: "4rem", left: 0, width: "100%", zIndex: 1 }}>
                     <Box sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }}>
                         <Button variant="outlined" sx={{ fontSize: 20, backgroundColor: "#0A964F", color: "white", textShadow: "1px 1px 2px black", maxWidth: "360px" }} onClick={launchVersion}>
                             {`Play ${props.selectedVersion}`}
@@ -61,6 +61,28 @@ export default function HomePage(props: IHomepageProps) {
                     <AddVerionModal open={versionModal} callback={download} availableVersions={props.availableVersions}></AddVerionModal>
                 </Box>
             </Box>
+            <Box
+                sx={{
+                    position: "fixed",
+                    bottom: 0,
+                    left: 0,
+                    flexDirection: "column-reverse",
+                    width: "100%",
+                    height: "8rem",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    "&::before": {
+                        content: '""',
+                        position: "absolute",
+                        top: 0,
+                        left: "1rem",
+                        width: "calc(100% - 2rem)",
+                        height: "calc(100% - 1rem)",
+                        backgroundColor: "rgba(0, 0, 0, 0.75)", // Black with 50% opacity
+                        zIndex: -1,
+                    },
+                }}
+            ></Box>
         </Box>
     );
 }

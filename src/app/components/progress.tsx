@@ -42,25 +42,24 @@ export default function LinearWithValueLabel() {
     if (downloadProgressVisibility) {
         return (
             <Box sx={{ width: "100%" }}>
-                <Typography sx={{ color: "white" }}>Downloading...</Typography>
+                <Typography sx={{ color: "white", textAlign: "center" }}>Downloading...</Typography>
                 <LinearProgressWithLabel value={progress} />
             </Box>
         );
     } else if (appxExtractProgressVisibility && stage === "idle") {
         return (
             <Box sx={{ width: "100%" }}>
-                <Typography sx={{ color: "white" }}>Extracting files. This will take a few minutes.</Typography>
+                <Typography sx={{ color: "white", textAlign: "center" }}>Extracting files. This will take several minutes.</Typography>
                 <LinearProgress />
             </Box>
         );
     } else if (appxExtractProgressVisibility && stage !== "idle") {
         return (
             <Box sx={{ width: "100%" }}>
-                <Typography sx={{ color: "white" }}>{stage}</Typography>
+                <Typography sx={{ color: "white", textAlign: "center" }}>{stage}</Typography>
                 <LinearProgress />
             </Box>
         );
     }
-
     return <Box sx={{ width: "100%" }}></Box>;
 }
