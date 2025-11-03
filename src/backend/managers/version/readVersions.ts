@@ -16,7 +16,9 @@ export async function readInstalledVersions(): Promise<void> {
 
     installations.forEach((installation) => {
         if (fs.existsSync(installLocation + "\\" + installation + "\\Minecraft.Windows.exe")) {
-            installedVersionsForUI.push(prettifyVersionNumbers(installation));
+            const type = installation.toLowerCase().includes("minecraftwindowsbeta") ? "Preview " : "Release ";
+            const sideloadedText = installation.toLowerCase().includes("_sideloaded") ? " (sideloaded)" : "";
+            installedVersionsForUI.push(type + prettifyVersionNumbers(installation) + sideloadedText);
             installedVersions.push(installation);
         }
     });
@@ -24,7 +26,7 @@ export async function readInstalledVersions(): Promise<void> {
     window.webContents.send("installedVersions", installedVersionsForUI);
 }
 
-function prettifyVersionNumbers(version: string): string {
+export function prettifyVersionNumbers(version: string): string {
     version = version.toLowerCase().replace("microsoft.minecraftuwp_", "").replace("microsoft.minecraftwindowsbeta_", "").replace(".0_x64__8wekyb3d8bbwe", "").replace("_sideloaded", "");
     const majorVersion = version.slice(0, -2);
     const minorVersion = version.slice(-2);

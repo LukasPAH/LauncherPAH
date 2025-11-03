@@ -11,21 +11,21 @@ interface TabPanelProps {
     value: number;
 }
 
+interface ITabProps {
+    selectedVersion: string;
+}
+
 function CustomTabPanel(props: TabPanelProps) {
     const { children, value, index, ...other } = props;
 
     return (
         <div role="tabpanel" hidden={value !== index} id={`simple-tabpanel-${index}`} aria-labelledby={`simple-tab-${index}`} {...other}>
-            {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+            {value === index && <Box sx={{ p: 1 }}>{children}</Box>}
         </div>
     );
 }
 
-window.addEventListener("load", () => {
-    window.electronAPI.send("UILoaded", undefined);
-});
-
-export default function BasicTabs() {
+export default function BasicTabs(props: ITabProps) {
     const [value, setValue] = React.useState(0);
 
     const handleChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -39,26 +39,30 @@ export default function BasicTabs() {
         setVersions(versionsList);
     });
     window.electronAPI.on("availableVersions", (versionsList: string[]) => {
-        setAvailableVersions(versionsList)
-    })
+        setAvailableVersions(versionsList);
+    });
 
     return (
         <Box sx={{ width: "100%" }}>
-            <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <Box sx={{ borderBottom: 1, borderColor: "divider", height: "52px" }}>
                 <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
                     <Tab label="Home" sx={{ color: "white" }} />
                     <Tab label="Manage Versions" sx={{ color: "white" }} />
                     <Tab label="Manage Profiles" sx={{ color: "white" }} />
+                    <Tab label="Launcher Settings" sx={{ color: "white" }} />
                 </Tabs>
             </Box>
             <CustomTabPanel value={value} index={0}>
-                <HomePage versions={versions} />
+                <HomePage versions={versions} availableVersions={availableVersions} selectedVersion={props.selectedVersion} />
             </CustomTabPanel>
             <CustomTabPanel value={value} index={1}>
-                <ButtonStack versions={availableVersions} />
+                <ButtonStack versions={availableVersions} installedVersions={versions} />
             </CustomTabPanel>
             <CustomTabPanel value={value} index={2}>
-                Item Three
+                Coming Soon
+            </CustomTabPanel>
+            <CustomTabPanel value={value} index={3}>
+                Coming Soon
             </CustomTabPanel>
         </Box>
     );

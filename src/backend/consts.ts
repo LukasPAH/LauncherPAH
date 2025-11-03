@@ -85,3 +85,7 @@ export function getReleaseLocation() {
 export function getDefaultPreviewLocation() {
     return defaultPreviewLocation;
 }
+
+export function getLastLaunchedVersion() {
+    return data.settings.lastLaunchedVersion;
+}

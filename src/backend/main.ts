@@ -5,7 +5,9 @@ import { readInstalledVersions } from "./managers/version/readVersions";
 import { downloadVersion } from "./events/responses/downloadVersion";
 import { getAvailableVersions } from "./managers/version/availableVersions";
 import { pickFile } from "./events/responses/pickFile";
-import { launchInstalledVersion } from "./events/responses/launchVersion";
+import { launchVersion } from "./events/responses/launchVersion";
+import { setSelectedVersion, setSelectedVersionOnAppStart } from "./events/responses/setSelectedVersion";
+import { getLastLaunchedVersion } from "./consts";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -17,6 +19,8 @@ const createWindow = async () => {
     const mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
+        minHeight: 600,
+        minWidth: 800,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
             defaultFontFamily: {
@@ -51,14 +55,20 @@ app.on("ready", async () => {
     ipcMain.on("UILoaded", async () => {
         await readInstalledVersions();
         await getAvailableVersions();
+        const lastLaunchedVersion = getLastLaunchedVersion()
+        setSelectedVersionOnAppStart(lastLaunchedVersion)
     });
-    ipcMain.on("launchInstalledVersion", (_, index: number) => {
-        launchInstalledVersion(index);
+    ipcMain.on("launchVersion", () => {
+        const lastLaunchedVersion = getLastLaunchedVersion()
+        if (lastLaunchedVersion !== false) launchVersion(lastLaunchedVersion);
     });
     ipcMain.on("download", (_, index: number) => {
         downloadVersion(index);
     });
     ipcMain.on("filePick", pickFile);
+    ipcMain.on("setSelectedVersion", (_, index: number) => {
+        setSelectedVersion(index);
+    });
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
