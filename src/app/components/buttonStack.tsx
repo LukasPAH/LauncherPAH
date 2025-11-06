@@ -7,6 +7,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import FolderIcon from "@mui/icons-material/Folder";
 import Modal from "@mui/material/Modal";
 import { SxProps } from "@mui/material";
+import Divider from "@mui/material/Divider";
 
 interface IButtonStackProps {
     versions: string[];
@@ -24,29 +25,7 @@ function openInstallLocation(index: number) {
 export default function ButtonStack(props: IButtonStackProps) {
     return (
         <div>
-            <Stack spacing={2}>
-                {props.installedVersions.map((version, index) => (
-                    <Box key={`div${index}`} sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }} alignItems="center">
-                        <Typography sx={{ color: "white", textAlign: "center" }} key={index} variant="body1">
-                            {`Minecraft ${version}`}
-                        </Typography>
-                        <div style={{ width: "1rem", height: "100%" }}></div>
-                        <Button
-                            startIcon={<FolderIcon></FolderIcon>}
-                            sx={{
-                                color: "rgba(156, 170, 201, 1)",
-                            }}
-                            key={`open${index}`}
-                            onClick={() => {
-                                openInstallLocation(index);
-                            }}
-                        >
-                            {"Open Install Location"}
-                        </Button>
-                        <div style={{ width: "1rem", height: "100%" }}></div>
-                        <RemoveModal index={index} versions={props.installedVersions}></RemoveModal>
-                    </Box>
-                ))}
+            <Stack spacing={1}>
                 <Box sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }}>
                     <Button
                         key="custom"
@@ -56,9 +35,40 @@ export default function ButtonStack(props: IButtonStackProps) {
                         }}
                         sx={{ width: "fit-content" }}
                     >
-                        {"Pick and Sideload Custom Build"}
+                        {"Pick and Sideload Custom Version"}
                     </Button>
                 </Box>
+
+                <Box>
+                    <div style={{ width: "1rem", height: "100%" }}></div>
+                    <Divider sx={{ bgcolor: "#535353ff", width: "85%", justifySelf: "center" }}></Divider>
+                </Box>
+                {props.installedVersions.map((version, index) => (
+                    <Box key={`div${index}`} alignItems="center">
+                        <Typography sx={{ color: "white", textAlign: "center" }} key={index} variant="body1">
+                            {`Minecraft ${version}`}
+                        </Typography>
+                        <Box sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }}>
+                            {" "}
+                            <Button
+                                startIcon={<FolderIcon></FolderIcon>}
+                                sx={{
+                                    color: "rgba(156, 170, 201, 1)",
+                                }}
+                                key={`open${index}`}
+                                onClick={() => {
+                                    openInstallLocation(index);
+                                }}
+                            >
+                                {"Open Install Location"}
+                            </Button>
+                            <div style={{ width: "1rem", height: "100%" }}></div>
+                            <RemoveModal index={index} versions={props.installedVersions}></RemoveModal>
+                        </Box>
+                        <div style={{ width: "1rem", height: "100%" }}></div>
+                        <Divider sx={{ bgcolor: "#535353ff", width: "85%", justifySelf: "center" }}></Divider>
+                    </Box>
+                ))}
             </Stack>
             <div style={{ width: 0, height: "1rem" }}></div>
         </div>
@@ -98,7 +108,7 @@ function RemoveModal(props: IRemoveModalProps) {
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
-    const removeModalText = `Are you sure you want to permanently delete ${props.versions[props.index].toLowerCase()}?`
+    const removeModalText = `Are you sure you want to permanently delete ${props.versions[props.index].toLowerCase()}?`;
 
     return (
         <div>

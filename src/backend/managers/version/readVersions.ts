@@ -1,9 +1,9 @@
 import { BrowserWindow } from "electron";
-import * as consts from "../../consts";
+import * as settings from "../../settings";
 import * as fsAsync from "fs/promises";
 import fs from "fs";
 
-const installLocation = consts.launcherLocation + "\\installations";
+const installLocation = settings.launcherLocation + "\\installations";
 
 const installedVersions: string[] = [];
 

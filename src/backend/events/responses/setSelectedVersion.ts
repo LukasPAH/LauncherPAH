@@ -1,4 +1,4 @@
-import { updateLastLaunchedVersion } from "../../consts";
+import { updateLastLaunchedVersion } from "../../settings";
 import { getInstalledVersions, prettifyVersionNumbers } from "../../managers/version/readVersions";
 import { BrowserWindow } from "electron";
 

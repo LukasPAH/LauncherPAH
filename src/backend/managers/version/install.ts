@@ -1,4 +1,4 @@
-import * as consts from "../../consts";
+import * as settings from "../../settings";
 import * as fsAsync from "fs/promises";
 import fs from "fs";
 import { run } from "../../utils/powershell";
@@ -9,9 +9,9 @@ import { launchVersion } from "../../events/responses/launchVersion";
 export async function install(file: string, window: Electron.BrowserWindow, isBeta: boolean, sideloaded = false) {
     const versionNameRegex = /[^\\]*.msixvc$/;
     const versionName = file.match(versionNameRegex)[0].replace(".msixvc", "");
-    const removeAppxCommand = `$name = (Get-AppxPackage -Name "${isBeta ? consts.previewPackageName : consts.releasePackageName}").PackageFullName; Remove-AppxPackage -Package $name;`;
+    const removeAppxCommand = `$name = (Get-AppxPackage -Name "${isBeta ? settings.previewPackageName : settings.releasePackageName}").PackageFullName; Remove-AppxPackage -Package $name;`;
 
-    const defaultLocation = isBeta ? consts.getDefaultPreviewLocation() : consts.getReleaseLocation();
+    const defaultLocation = isBeta ? settings.getDefaultPreviewLocation() : settings.getReleaseLocation();
 
     try {
         await run(removeAppxCommand);
@@ -19,14 +19,14 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
         //
     }
 
-    const result = await register(file, defaultLocation, consts.getDrive());
+    const result = await register(file, defaultLocation, settings.getDrive());
     if (result === 1) {
         throw new Error("Failed to install! Please try again later!");
     }
 
     window.webContents.send("progressStage", "Moving files to installation folder...");
 
-    const targetLocation = consts.installationsLocation + "\\" + versionName + (sideloaded ? "_sideloaded" : "");
+    const targetLocation = settings.installationsLocation + "\\" + versionName + (sideloaded ? "_sideloaded" : "");
     if (!fs.existsSync(targetLocation)) await fsAsync.mkdir(targetLocation);
 
     // Move the executable first.
@@ -50,7 +50,7 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
         fs.rm(tempFolder, { force: true, recursive: true }, () => {
             0;
         });
-    consts.updateLastLaunchedVersion(versionName);
+    settings.updateLastLaunchedVersion(versionName);
     await addInstallation(versionName);
     launchVersion(versionName);
     window.webContents.send("progressStage", "idle");

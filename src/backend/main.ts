@@ -7,7 +7,7 @@ import { getAvailableVersions } from "./managers/version/availableVersions";
 import { pickFile } from "./events/responses/pickFile";
 import { launchVersion } from "./events/responses/launchVersion";
 import { setSelectedVersion, setSelectedVersionOnAppStart } from "./events/responses/setSelectedVersion";
-import { getLastLaunchedVersion } from "./consts";
+import { getLastLaunchedVersion } from "./settings";
 import { removeVersion } from "./events/responses/removeVersion";
 import { openFolder } from "./events/responses/openFolder";
 
