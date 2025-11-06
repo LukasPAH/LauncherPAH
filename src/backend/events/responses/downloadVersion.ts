@@ -1,7 +1,7 @@
 import { BrowserWindow } from "electron";
 import { download } from "electron-dl";
 import fs from "fs";
-import { isVersionInstalled } from "../../managers/version/readVersions";
+import { isVersionInstalled, prettifyVersionNumbers } from "../../managers/version/readVersions";
 import { install } from "../../managers/version/install";
 import { getBackendVersionDB } from "../../managers/version/availableVersions";
 
@@ -38,15 +38,18 @@ export async function downloadVersion(DBIndex: number) {
 
     const urlToUse = sortedTimes[0].url;
 
+    const versionNumber = prettifyVersionNumbers(versionName);
+    const previewOrRelease = versionName.toLowerCase().includes("minecraftwindowsbeta") ? "Preview ": "Release "
+
     if (!fs.existsSync(process.cwd() + "\\tmp_download\\" + versionName + ".msixvc")) {
         await download(window, urlToUse, {
             directory: process.cwd() + "\\tmp_download",
             onProgress(progress) {
-                window.webContents.send("downloadProgress", progress);
+                window.webContents.send("downloadProgress", progress, previewOrRelease + versionNumber);
             },
             onCompleted(file) {
                 filePath = file.path;
-                window.webContents.send("downloadCompleted", undefined);
+                window.webContents.send("downloadCompleted", previewOrRelease + versionNumber);
             },
         });
         if (filePath === undefined) return;

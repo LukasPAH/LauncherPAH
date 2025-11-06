@@ -41,3 +41,17 @@ export function isVersionInstalled(name: string): boolean {
 export function getInstalledVersions() {
     return installedVersions;
 }
+
+export async function removeInstalledVersion(version: string) {
+    await fsAsync.rm(installLocation + "\\" + version, { recursive: true });
+
+    const index = installedVersions.findIndex((value) => {
+        return value === version;
+    });
+
+    if (index !== -1) {
+        installedVersions.splice(index, 1);
+    }
+
+    await readInstalledVersions();
+}

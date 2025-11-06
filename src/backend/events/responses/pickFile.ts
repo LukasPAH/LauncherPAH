@@ -1,5 +1,6 @@
 import { BrowserWindow, dialog } from "electron";
 import { install } from "../../managers/version/install";
+import { prettifyVersionNumbers } from "../../managers/version/readVersions";
 
 export async function pickFile() {
     const window = BrowserWindow.getAllWindows()[0];
@@ -10,7 +11,13 @@ export async function pickFile() {
     if (!chosenFile.endsWith(".msixvc")) return;
 
     const isBeta = chosenFile.toLowerCase().includes("minecraftwindowsbeta");
+    const previewOrRelease = isBeta ? "Preview " : "Release ";
 
-    window.webContents.send("downloadCompleted", undefined);
+    const versionNameRegex = /[^/]*.msixvc$/;
+    const versionName = chosenFile.match(versionNameRegex)[0].replace(".msixvc", "");
+
+    const versionNumber = prettifyVersionNumbers(versionName);
+
+    window.webContents.send("downloadCompleted", previewOrRelease + versionNumber);
     await install(chosenFile, window, isBeta, true);
 }

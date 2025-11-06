@@ -5,6 +5,8 @@ import Box from "@mui/material/Box";
 import React from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FolderIcon from "@mui/icons-material/Folder";
+import Modal from "@mui/material/Modal";
+import { SxProps } from "@mui/material";
 
 interface IButtonStackProps {
     versions: string[];
@@ -32,11 +34,7 @@ export default function ButtonStack(props: IButtonStackProps) {
                         <Button
                             startIcon={<FolderIcon></FolderIcon>}
                             sx={{
-                                backgroundColor: "rgb(55, 65, 81)",
                                 color: "rgba(156, 170, 201, 1)",
-                                "&:hover": {
-                                    backgroundColor: "rgba(65, 86, 120, 1)",
-                                },
                             }}
                             key={`open${index}`}
                             onClick={() => {
@@ -45,24 +43,8 @@ export default function ButtonStack(props: IButtonStackProps) {
                         >
                             {"Open Install Location"}
                         </Button>
-
                         <div style={{ width: "1rem", height: "100%" }}></div>
-                        <Button
-                            key={`remove${index}`}
-                            sx={{
-                                backgroundColor: "rgb(55, 65, 81)",
-                                color: "rgba(159, 75, 75, 1)",
-                                "&:hover": {
-                                    backgroundColor: "rgba(65, 86, 120, 1)",
-                                },
-                            }}
-                            startIcon={<DeleteIcon></DeleteIcon>}
-                            onClick={() => {
-                                removeVersion(index);
-                            }}
-                        >
-                            {"Remove"}
-                        </Button>
+                        <RemoveModal index={index} versions={props.installedVersions}></RemoveModal>
                     </Box>
                 ))}
                 <Box sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }}>
@@ -79,6 +61,80 @@ export default function ButtonStack(props: IButtonStackProps) {
                 </Box>
             </Stack>
             <div style={{ width: 0, height: "1rem" }}></div>
+        </div>
+    );
+}
+
+interface IRemoveModalProps {
+    index: number;
+    versions: string[];
+}
+
+const modalStyle = {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    width: 300,
+    bgcolor: "#212322",
+    p: 4,
+};
+
+const removeButtonStyle = {
+    color: "rgba(159, 75, 75, 1)",
+};
+
+const removeButtonBoxStyle: SxProps = {
+    position: "absolute",
+    bottom: "0%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    display: "flex",
+    flexDirection: "row",
+};
+
+function RemoveModal(props: IRemoveModalProps) {
+    const [open, setOpen] = React.useState(false);
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+
+    const removeModalText = `Are you sure you want to permanently delete ${props.versions[props.index].toLowerCase()}?`
+
+    return (
+        <div>
+            <Button sx={removeButtonStyle} key={`removeStack${props.index}`} onClick={handleOpen} startIcon={<DeleteIcon></DeleteIcon>}>
+                Remove
+            </Button>
+            <Modal open={open} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+                <Box sx={modalStyle}>
+                    <Typography variant="h6" sx={{ color: "white", textAlign: "center" }}>
+                        {removeModalText}
+                    </Typography>
+                    <Box sx={{ height: 60 }}></Box>
+                    <Box sx={removeButtonBoxStyle}>
+                        <Button
+                            key={`close${props.index}`}
+                            onClick={() => {
+                                handleClose();
+                            }}
+                        >
+                            {"Cancel"}
+                        </Button>
+                        <Box sx={{ width: "1rem" }}></Box>
+                        <Button
+                            key={`remove${props.index}`}
+                            sx={removeButtonStyle}
+                            startIcon={<DeleteIcon></DeleteIcon>}
+                            onClick={() => {
+                                removeVersion(props.index);
+                                handleClose();
+                            }}
+                        >
+                            {"Remove"}
+                        </Button>
+                    </Box>
+                </Box>
+            </Modal>
         </div>
     );
 }

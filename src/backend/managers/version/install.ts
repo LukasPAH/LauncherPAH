@@ -19,7 +19,10 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
         //
     }
 
-    await register(file, defaultLocation, consts.getDrive());
+    const result = await register(file, defaultLocation, consts.getDrive());
+    if (result === 1) {
+        throw new Error("Failed to install! Please try again later and ensure you own the game!")
+    }
 
     window.webContents.send("progressStage", "Moving files to installation folder...");
 
@@ -54,7 +57,13 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
 }
 
 async function register(file: string, previewLocation: string, drive: Drive) {
-    await run(`Add-AppxPackage "${file}" -Volume '${drive}:\\XboxGames'`);
-    // Sometimes registration fails for whatever reason. Just keep retrying until it succeeds.
-    if (!fs.existsSync(previewLocation)) await register(file, previewLocation, drive);
+    try {
+        await run(`Add-AppxPackage "${file}" -Volume '${drive}:\\XboxGames'`);
+        // Sometimes registration doesn't complete fully. Just keep retrying until it succeeds.
+        if (!fs.existsSync(previewLocation)) await register(file, previewLocation, drive);
+        return 0;
+    } catch (error) {
+        // Installation failed, likely because the user doesn't own the game.
+        return 1;
+    }
 }
