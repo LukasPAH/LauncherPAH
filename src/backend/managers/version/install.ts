@@ -3,7 +3,7 @@ import * as fsAsync from "fs/promises";
 import fs from "fs";
 import { run } from "../../utils/powershell";
 import { moveFontMetadataFile, moveExecutable } from "../../utils/move";
-import { readInstalledVersions } from "./readVersions";
+import { addInstallation } from "./readVersions";
 import { launchVersion } from "../../events/responses/launchVersion";
 
 export async function install(file: string, window: Electron.BrowserWindow, isBeta: boolean, sideloaded = false) {
@@ -21,7 +21,7 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
 
     const result = await register(file, defaultLocation, consts.getDrive());
     if (result === 1) {
-        throw new Error("Failed to install! Please try again later and ensure you own the game!")
+        throw new Error("Failed to install! Please try again later!");
     }
 
     window.webContents.send("progressStage", "Moving files to installation folder...");
@@ -51,7 +51,7 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
             0;
         });
     consts.updateLastLaunchedVersion(versionName);
-    await readInstalledVersions();
+    await addInstallation(versionName);
     launchVersion(versionName);
     window.webContents.send("progressStage", "idle");
 }
