@@ -50,8 +50,8 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
         fs.rm(tempFolder, { force: true, recursive: true }, () => {
             0;
         });
-    await readInstalledVersions();
     consts.updateLastLaunchedVersion(versionName);
+    await readInstalledVersions();
     launchVersion(versionName);
     window.webContents.send("progressStage", "idle");
 }
