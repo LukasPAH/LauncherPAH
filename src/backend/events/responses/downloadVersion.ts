@@ -10,7 +10,7 @@ export async function downloadVersion(DBIndex: number) {
     window.webContents.send("startDownload", true);
     let filePath: string | undefined = undefined;
 
-    const versionDB = getBackendVersionDB();
+    const versionDB = await getBackendVersionDB();
     const url = versionDB[DBIndex][0][0];
 
     const versionNameRegex = /[^/]*.msixvc$/;

@@ -2,7 +2,6 @@ import * as React from "react";
 import Box from "@mui/material/Box";
 import DropDown from "./dropDown";
 import { Button } from "@mui/material";
-import AddVerionModal from "./addVersion";
 
 interface IHomepageProps {
     versions: string[];
@@ -11,21 +10,9 @@ interface IHomepageProps {
 }
 
 export default function HomePage(props: IHomepageProps) {
-    const [versionModal, setVersionModal] = React.useState(false);
-
-    function openAvailableVersions() {
-        setVersionModal(true);
-    }
 
     function selectVersion(index: number) {
         window.electronAPI.send("setSelectedVersion", index);
-    }
-
-    function download(selectedVersion: boolean, index: number) {
-        setVersionModal(false);
-        if (selectedVersion) {
-            window.electronAPI.send("download", index);
-        }
     }
 
     function launchVersion() {
@@ -45,7 +32,7 @@ export default function HomePage(props: IHomepageProps) {
                 </Box>
             </Box>
             <Box sx={{ position: "fixed", bottom: "4rem", left: "1rem", width: "40%", zIndex: 2 }}>
-                <DropDown versions={props.versions} callback={selectVersion} enableNewButton={true} newButtonCallback={openAvailableVersions} />
+                <DropDown versions={props.versions} callback={selectVersion} enableNewButton={false} />
             </Box>
             {props.selectedVersion !== "" && (
                 <Box sx={{ position: "fixed", bottom: "4rem", left: 0, width: "100%", zIndex: 1 }}>
@@ -58,7 +45,6 @@ export default function HomePage(props: IHomepageProps) {
             )}
             <Box sx={{ position: "fixed", bottom: "50%", left: 0, width: "100%", zIndex: 10 }}>
                 <Box sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }}>
-                    <AddVerionModal open={versionModal} callback={download} availableVersions={props.availableVersions}></AddVerionModal>
                 </Box>
             </Box>
             <Box

@@ -1,4 +1,6 @@
 import fs from "fs";
+import { getLatestRelease, getLatestPreview } from "./managers/version/availableVersions";
+import { loadProfilesOnLaunch } from "./managers/profile/readProfiles";
 
 const data = loadLocalData();
 export const launcherLocation = process.env.APPDATA + "\\LauncherPAH";
@@ -14,6 +16,16 @@ const defaultData: ILocalData = {
     settings: {
         installDrive: "C",
         lastLaunchedVersion: false,
+        profiles: {
+            default: {
+                name: "Default",
+                version: "",
+            },
+            defaultPreview: {
+                name: "Preview",
+                version: "",
+            },
+        },
     },
 };
 
@@ -30,6 +42,24 @@ function loadLocalData(): ILocalData {
         }
         if (localData.settings.lastLaunchedVersion === undefined) {
             localData.settings.lastLaunchedVersion = false;
+            fileNeedsUpdate = true;
+        }
+        if (localData.settings.profiles === undefined) {
+            localData.settings.profiles = {};
+            fileNeedsUpdate = true;
+        }
+        if (typeof localData.settings.profiles.default !== "object") {
+            localData.settings.profiles.default = {
+                name: "Default",
+                version: "",
+            };
+            fileNeedsUpdate = true;
+        }
+        if (typeof localData.settings.profiles.defaultPreview !== "object") {
+            localData.settings.profiles.defaultPreview = {
+                name: "Preview",
+                version: "",
+            };
             fileNeedsUpdate = true;
         }
         if (fileNeedsUpdate) {
@@ -88,4 +118,48 @@ export function getDefaultPreviewLocation() {
 
 export function getLastLaunchedVersion() {
     return data.settings.lastLaunchedVersion;
+}
+
+export async function getDefaultProfileVersion() {
+    const defaultProfile = data.settings.profiles.default;
+    if (defaultProfile.name === undefined || defaultProfile.version === undefined || defaultProfile.version === "") {
+        data.settings.profiles.default.name = "Default";
+        data.settings.profiles.default.version = await getLatestRelease();
+        data.settings.profiles.default = defaultProfile;
+    }
+    writeLocalData(data);
+    return defaultProfile;
+}
+
+export async function getDefaultPreviewProfileVersion() {
+    const defaultPreviewProfile = data.settings.profiles.defaultPreview;
+    if (defaultPreviewProfile.name === undefined || defaultPreviewProfile.version === undefined || defaultPreviewProfile.version === "") {
+        data.settings.profiles.defaultPreview.name = "Preview";
+        data.settings.profiles.defaultPreview.version = await getLatestPreview();
+        data.settings.profiles.defaultPreview = defaultPreviewProfile;
+    }
+    writeLocalData(data);
+    return defaultPreviewProfile;
+}
+
+export async function updateDefaultProfileVersionsOnLaunch() {
+    data.settings.profiles.default = await getDefaultProfileVersion();
+    data.settings.profiles.defaultPreview = await getDefaultPreviewProfileVersion();
+    loadProfilesOnLaunch(data.settings.profiles);
+    writeLocalData(data);
+}
+
+export async function getProfileVersion(profile: string) {
+    return data.settings.profiles[profile];
+}
+
+export function setProfileVersion(profile: string, name: string, version: string) {
+    data.settings.profiles[profile].name = name;
+    data.settings.profiles[profile].version = version;
+    writeLocalData(data);
+}
+
+export function removeProfileSetting(profile: string) {
+    delete data.settings.profiles[profile];
+    writeLocalData(data);
 }

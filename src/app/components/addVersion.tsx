@@ -7,35 +7,61 @@ import RadioGroup from "@mui/material/RadioGroup";
 import DialogTitle from "@mui/material/DialogTitle";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
+import TextBox from "./textBox";
 
 interface IAddVersionProps {
     open: boolean;
-    callback: (selectedVersion: boolean, index: number) => void;
+    callback: (index: number, profileName: string) => void;
     availableVersions: string[];
 }
 
 export default function ScrollDialog(props: IAddVersionProps) {
     const { open } = props;
 
-    const [selectedVersionIndex, setSelectedVersionIndex] = React.useState(0);
+    const [selectedVersionIndex, setSelectedVersionIndex] = React.useState(-1);
+    const [canSubmit, setCanSubmit] = React.useState(false);
+    const [text, setText] = React.useState("");
+
+    function textChangeCallback(isAllowed: boolean) {
+        setCanSubmit(isAllowed);
+    }
+
+    function textCallback(name: string) {
+        setText(name);
+    }
+
+    function resetStates() {
+        setSelectedVersionIndex(-1);
+        setCanSubmit(false);
+    }
 
     return (
         <React.Fragment>
-            <Dialog open={open} onClose={() => props.callback(false, 0)} scroll={"paper"} disableRestoreFocus={true}>
-                <DialogTitle id="scroll-dialog-title">Select Version to Download</DialogTitle>
-                <DialogContent dividers={true}>
+            <Dialog
+                sx={{ "& .MuiDialog-paper": { backgroundColor: "#242424ff" } }}
+                open={open}
+                onClose={() => {
+                    props.callback(-1, "");
+                    resetStates();
+                }}
+                scroll={"paper"}
+                disableRestoreFocus={true}
+            >
+                <TextBox disallowedValues={["test"]} nameAllowedCallback={textChangeCallback} nameCallback={textCallback}></TextBox>
+                <DialogTitle sx={{ color: "white" }} id="scroll-dialog-title">
+                    Select Version
+                </DialogTitle>
+                <DialogContent>
                     <RadioGroup>
                         {props.availableVersions.map((option, index) => (
                             <FormControlLabel
-                                sx={{width: "300px"}}
+                                sx={{ width: "300px", color: "white" }}
                                 value={option}
                                 key={option}
                                 control={<Radio />}
                                 label={option}
                                 onClick={() => {
-                                    {
-                                        setSelectedVersionIndex(index);
-                                    }
+                                    setSelectedVersionIndex(index);
                                 }}
                             ></FormControlLabel>
                         ))}
@@ -44,17 +70,21 @@ export default function ScrollDialog(props: IAddVersionProps) {
                 <DialogActions>
                     <Button
                         onClick={() => {
-                            props.callback(false, 0);
+                            props.callback(-1, "");
+                            resetStates();
                         }}
                     >
                         Cancel
                     </Button>
                     <Button
                         onClick={() => {
-                            props.callback(true, selectedVersionIndex);
+                            if (canSubmit && selectedVersionIndex !== -1) {
+                                props.callback(selectedVersionIndex, text);
+                                resetStates();
+                            }
                         }}
                     >
-                        Download
+                        Ok
                     </Button>
                 </DialogActions>
             </Dialog>

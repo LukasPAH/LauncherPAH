@@ -9,30 +9,37 @@ import Modal from "@mui/material/Modal";
 import { SxProps } from "@mui/material";
 import Divider from "@mui/material/Divider";
 import AddIcon from "@mui/icons-material/Add";
+import AddVerionModal from "./addVersion";
 
 interface IButtonStackProps {
     versions: string[];
-    installedVersions: string[];
+    profiles: IProfiles;
+    availableVersions: string[];
 }
 
-function removeVersion(index: number) {
-    window.electronAPI.send("removeVersion", index);
+function removeProfile(name: string) {
+    window.electronAPI.send("removeProfile", name);
 }
 
-function openInstallLocation(index: number) {
-    window.electronAPI.send("openInstallLocation", index);
+function openProfileLocation(name: string) {
+    window.electronAPI.send("openProfileLocation", name);
 }
 
-export default function ButtonStack(props: IButtonStackProps) {
+export default function ProfileScreen(props: IButtonStackProps) {
+    const profiles = Object.entries(props.profiles);
+
+    const [versionModal, setVersionModal] = React.useState(false);
+
+    function addProfile(index: number, profileName: string) {
+        setVersionModal(false);
+        if (index !== -1) window.electronAPI.send("addProfile", { name: profileName, index: index });
+    }
+
     return (
         <div>
             <Stack spacing={1}>
                 <Box sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }}>
                     <Button
-                        key="custom"
-                        onClick={() => {
-                            window.electronAPI.send("filePick", {});
-                        }}
                         sx={{
                             fontSize: 14,
                             backgroundColor: "rgb(55, 65, 81)",
@@ -45,9 +52,14 @@ export default function ButtonStack(props: IButtonStackProps) {
                                 color: "white",
                             },
                         }}
+                        disableRipple
+                        onClick={() => {
+                            setVersionModal(true);
+                        }}
                     >
                         <AddIcon></AddIcon>
-                        {"Sideload Custom Version"}
+                        <div style={{ width: "4px", height: 0 }}></div>
+                        {"Add New Profile"}
                     </Button>
                 </Box>
 
@@ -55,10 +67,10 @@ export default function ButtonStack(props: IButtonStackProps) {
                     <div style={{ width: "1rem", height: "100%" }}></div>
                     <Divider sx={{ bgcolor: "#535353ff", width: "85%", justifySelf: "center" }}></Divider>
                 </Box>
-                {props.installedVersions.map((version, index) => (
+                {profiles.map(([profileName, profile], index) => (
                     <Box key={`div${index}`} alignItems="center">
                         <Typography sx={{ color: "white", textAlign: "center" }} key={index} variant="body1">
-                            {`Minecraft ${version}`}
+                            {`${profile.name} - ${profile.version}`}
                         </Typography>
                         <Box sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }}>
                             {" "}
@@ -69,13 +81,13 @@ export default function ButtonStack(props: IButtonStackProps) {
                                 }}
                                 key={`open${index}`}
                                 onClick={() => {
-                                    openInstallLocation(index);
+                                    openProfileLocation(profileName);
                                 }}
                             >
-                                {"Open Install Location"}
+                                {"Open Profile Location"}
                             </Button>
                             <div style={{ width: "1rem", height: "100%" }}></div>
-                            <RemoveModal index={index} versions={props.installedVersions}></RemoveModal>
+                            <RemoveModal profiles={props.profiles} index={index}></RemoveModal>
                         </Box>
                         <div style={{ width: "1rem", height: "100%" }}></div>
                         <Divider sx={{ bgcolor: "#535353ff", width: "85%", justifySelf: "center" }}></Divider>
@@ -83,13 +95,18 @@ export default function ButtonStack(props: IButtonStackProps) {
                 ))}
             </Stack>
             <div style={{ width: 0, height: "1rem" }}></div>
+            <Box sx={{ position: "fixed", bottom: "50%", left: 0, width: "100%", zIndex: 10 }}>
+                <Box sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }}>
+                    <AddVerionModal open={versionModal} callback={addProfile} availableVersions={props.availableVersions}></AddVerionModal>
+                </Box>
+            </Box>
         </div>
     );
 }
 
 interface IRemoveModalProps {
+    profiles: IProfiles;
     index: number;
-    versions: string[];
 }
 
 const modalStyle = {
@@ -120,7 +137,9 @@ function RemoveModal(props: IRemoveModalProps) {
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
-    const removeModalText = `Are you sure you want to permanently delete ${props.versions[props.index].toLowerCase()}?`;
+    const profiles = Object.entries(props.profiles);
+
+    const removeModalText = `Are you sure you want to permanently remove the following profile?${profiles[props.index][0]}`;
 
     return (
         <div>
@@ -148,8 +167,8 @@ function RemoveModal(props: IRemoveModalProps) {
                             sx={removeButtonStyle}
                             startIcon={<DeleteIcon></DeleteIcon>}
                             onClick={() => {
-                                removeVersion(props.index);
                                 handleClose();
+                                removeProfile(profiles[props.index][1].name);
                             }}
                         >
                             {"Remove"}

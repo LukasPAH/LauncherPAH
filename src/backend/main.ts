@@ -7,9 +7,10 @@ import { getAvailableVersions } from "./managers/version/availableVersions";
 import { pickFile } from "./events/responses/pickFile";
 import { launchVersion } from "./events/responses/launchVersion";
 import { setSelectedVersion, setSelectedVersionOnAppStart } from "./events/responses/setSelectedVersion";
-import { getLastLaunchedVersion } from "./settings";
+import { getLastLaunchedVersion, updateDefaultProfileVersionsOnLaunch } from "./settings";
 import { removeVersion } from "./events/responses/removeVersion";
 import { openFolder } from "./events/responses/openFolder";
+import { addProfileEventResponse, removeProfileEventResponse } from "./events/responses/profile";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -59,6 +60,7 @@ app.on("ready", async () => {
         await getAvailableVersions();
         const lastLaunchedVersion = getLastLaunchedVersion();
         setSelectedVersionOnAppStart(lastLaunchedVersion);
+        await updateDefaultProfileVersionsOnLaunch();
     });
     ipcMain.on("launchVersion", () => {
         const lastLaunchedVersion = getLastLaunchedVersion();
@@ -72,11 +74,17 @@ app.on("ready", async () => {
         setSelectedVersion(index);
     });
     ipcMain.on("removeVersion", async (_, index: number) => {
-        await removeVersion(index)
-    }) 
+        await removeVersion(index);
+    });
     ipcMain.on("openInstallLocation", async (_, index: number) => {
-        await openFolder(index)
-    })
+        await openFolder(index);
+    });
+    ipcMain.on("addProfile", async (_, data) => {
+        await addProfileEventResponse(data.name, data.index);
+    });
+    ipcMain.on("removeProfile", (_, name) => {
+        removeProfileEventResponse(name);
+    });
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common

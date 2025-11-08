@@ -3,9 +3,19 @@ type Drive = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "
 interface ISettings {
     installDrive: Drive;
     lastLaunchedVersion: false | string;
+    profiles: IProfiles
 }
 
 interface ILocalData {
     file_version: number;
     settings: ISettings;
+}
+
+interface IProfiles {
+    [key: string]: IProfile
+}
+
+interface IProfile {
+    name: string,
+    version: string,
 }

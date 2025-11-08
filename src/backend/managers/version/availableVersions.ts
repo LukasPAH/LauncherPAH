@@ -5,8 +5,27 @@ const versionDB = "https://raw.githubusercontent.com/LukasPAH/minecraft-windows-
 let backendVersionDB: [string[], string][] = [];
 
 // @remarks Gets the version database. [url, version name]
-export function getBackendVersionDB() {
+export async function getBackendVersionDB() {
+    if (backendVersionDB.length === 0) await getAvailableVersions();
     return backendVersionDB;
+}
+
+export async function getLatestRelease() {
+    await getBackendVersionDB();
+    const releaseVersions = backendVersionDB.filter((value) => value[1].includes("Release"));
+
+    const latestRelease = releaseVersions[releaseVersions.length - 1];
+    const latestReleaseName = latestRelease[1];
+    return latestReleaseName;
+}
+
+export async function getLatestPreview() {
+    await getBackendVersionDB();
+    const releaseVersions = backendVersionDB.filter((value) => value[1].includes("Preview"));
+
+    const latestPreview = releaseVersions[releaseVersions.length - 1];
+    const latestPreviewName = latestPreview[1];
+    return latestPreviewName;
 }
 
 export async function getAvailableVersions() {

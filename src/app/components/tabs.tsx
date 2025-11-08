@@ -4,6 +4,7 @@ import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
 import ButtonStack from "./buttonStack";
 import HomePage from "./homePage";
+import Profile from "./profileScreen"
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -13,6 +14,7 @@ interface TabPanelProps {
 
 interface ITabProps {
     selectedVersion: string;
+    createdProfiles: IProfiles;
 }
 
 function CustomTabPanel(props: TabPanelProps) {
@@ -59,7 +61,7 @@ export default function BasicTabs(props: ITabProps) {
                 <ButtonStack versions={availableVersions} installedVersions={versions} />
             </CustomTabPanel>
             <CustomTabPanel value={value} index={2}>
-                Coming Soon
+                <Profile versions={availableVersions} profiles={props.createdProfiles} availableVersions={availableVersions}></Profile>
             </CustomTabPanel>
             <CustomTabPanel value={value} index={3}>
                 Coming Soon
