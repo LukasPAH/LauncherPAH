@@ -9,7 +9,7 @@ import { launchVersion } from "./events/responses/launchVersion";
 import { setSelectedProfile, setSelectedProfileOnStart } from "./events/responses/setSelectedVersion";
 import { getLastLaunchedProfileName, updateDefaultProfileVersionsOnLaunch } from "./settings";
 import { removeVersion } from "./events/responses/removeVersion";
-import { openFolder } from "./events/responses/openFolder";
+import { openFolder, openProfile } from "./events/responses/openFolder";
 import { addProfileEventResponse, removeProfileEventResponse } from "./events/responses/profile";
 import { tryMigrageGDKUserData } from "./managers/profile/profileFolder";
 import { getProfileFromName } from "./managers/profile/readProfiles";
@@ -65,7 +65,7 @@ app.on("ready", async () => {
         const lastLaunchedProfileName = getLastLaunchedProfileName();
         let profile = getProfileFromName(lastLaunchedProfileName);
         if (profile === undefined) {
-            profile = getProfileFromName("Default")
+            profile = getProfileFromName("Default");
         }
         await setSelectedProfileOnStart(profile);
     });
@@ -95,6 +95,9 @@ app.on("ready", async () => {
     });
     ipcMain.on("removeProfile", (_, name) => {
         removeProfileEventResponse(name);
+    });
+    ipcMain.on("openProfileLocation", (_, profile: IProfile) => {
+        openProfile(profile);
     });
 });
 

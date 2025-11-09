@@ -34,7 +34,7 @@ export function prettifyVersionNumbers(version: string): string {
 }
 
 export function uglifyVersionNumbers(version: string) {
-    version = version.replace("Release ", "").replace("Preview ", "");
+    version = version.replace("Release ", "").replace("Preview ", "").replace(" (Sideloaded)", "");
     const majorVersion = version.slice(0, -3);
     const minorVersion = version.slice(-2);
     return majorVersion + minorVersion;

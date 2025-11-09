@@ -21,8 +21,8 @@ function removeProfile(name: string) {
     window.electronAPI.send("removeProfile", name);
 }
 
-function openProfileLocation(name: string) {
-    window.electronAPI.send("openProfileLocation", name);
+function openProfileLocation(profile: IProfile) {
+    window.electronAPI.send("openProfileLocation", profile);
 }
 
 export default function ProfileScreen(props: IButtonStackProps) {
@@ -81,7 +81,7 @@ export default function ProfileScreen(props: IButtonStackProps) {
                                 }}
                                 key={`open${index}`}
                                 onClick={() => {
-                                    openProfileLocation(profileName);
+                                    openProfileLocation(profile);
                                 }}
                             >
                                 {"Open Profile Location"}

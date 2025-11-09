@@ -18,7 +18,7 @@ export async function launchVersion(profile: IProfile) {
             if (versionName === profile.version) break;
             index++;
         }
-        await downloadVersion(index, profile);
+        if (!profile.version.toLowerCase().includes("sideloaded")) await downloadVersion(index, profile);
     }
     const versionLocation = settings.installationsLocation + "\\" + versionFolder + "\\Minecraft.Windows.exe";
     if (fs.existsSync(versionLocation)) child_process.spawn(versionLocation, { detached: true, stdio: "ignore" });

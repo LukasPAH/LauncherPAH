@@ -55,7 +55,6 @@ export async function getVersionFolderFromName(name: string): Promise<string | u
     const profiles = getAllProfiles();
     let versionName: string | undefined = undefined;
     for (const profile of Object.values(profiles)) {
-        console.log(name, profile.name);
         if (profile.name === name) {
             versionName = profile.version;
             break;
