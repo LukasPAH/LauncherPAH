@@ -13,10 +13,17 @@ interface IAddVersionProps {
     open: boolean;
     callback: (index: number, profileName: string) => void;
     availableVersions: string[];
+    profiles: IProfiles;
 }
 
 export default function ScrollDialog(props: IAddVersionProps) {
-    const { open } = props;
+    const { open, profiles } = props;
+
+    const profileValues = Object.values(profiles);
+    const disallowedValues = [];
+    for (const profileValue of profileValues) {
+        disallowedValues.push(profileValue.name);
+    }
 
     const [selectedVersionIndex, setSelectedVersionIndex] = React.useState(-1);
     const [canSubmit, setCanSubmit] = React.useState(false);
@@ -47,7 +54,7 @@ export default function ScrollDialog(props: IAddVersionProps) {
                 scroll={"paper"}
                 disableRestoreFocus={true}
             >
-                <TextBox disallowedValues={["test"]} nameAllowedCallback={textChangeCallback} nameCallback={textCallback}></TextBox>
+                <TextBox disallowedValues={disallowedValues} nameAllowedCallback={textChangeCallback} nameCallback={textCallback}></TextBox>
                 <DialogTitle sx={{ color: "white" }} id="scroll-dialog-title">
                     Select Version
                 </DialogTitle>

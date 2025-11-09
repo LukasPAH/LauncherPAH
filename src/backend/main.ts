@@ -6,11 +6,13 @@ import { downloadVersion } from "./events/responses/downloadVersion";
 import { getAvailableVersions } from "./managers/version/availableVersions";
 import { pickFile } from "./events/responses/pickFile";
 import { launchVersion } from "./events/responses/launchVersion";
-import { setSelectedVersion, setSelectedVersionOnAppStart } from "./events/responses/setSelectedVersion";
-import { getLastLaunchedVersion, updateDefaultProfileVersionsOnLaunch } from "./settings";
+import { setSelectedProfile, setSelectedProfileOnStart } from "./events/responses/setSelectedVersion";
+import { getLastLaunchedProfileName, updateDefaultProfileVersionsOnLaunch } from "./settings";
 import { removeVersion } from "./events/responses/removeVersion";
 import { openFolder } from "./events/responses/openFolder";
 import { addProfileEventResponse, removeProfileEventResponse } from "./events/responses/profile";
+import { tryMigrageGDKUserData } from "./managers/profile/profileFolder";
+import { getProfileFromName } from "./managers/profile/readProfiles";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -55,23 +57,29 @@ const createWindow = async () => {
 // Some APIs can only be used after this event occurs.
 app.on("ready", async () => {
     await createWindow();
+    tryMigrageGDKUserData();
     ipcMain.on("UILoaded", async () => {
         await readInstalledVersions();
         await getAvailableVersions();
-        const lastLaunchedVersion = getLastLaunchedVersion();
-        setSelectedVersionOnAppStart(lastLaunchedVersion);
+        const lastLaunchedProfileName = getLastLaunchedProfileName();
+        const profile = getProfileFromName(lastLaunchedProfileName);
+        await setSelectedProfileOnStart(profile);
         await updateDefaultProfileVersionsOnLaunch();
     });
     ipcMain.on("launchVersion", () => {
-        const lastLaunchedVersion = getLastLaunchedVersion();
-        if (lastLaunchedVersion !== false) launchVersion(lastLaunchedVersion);
+        const lastLaunchedProfileName = getLastLaunchedProfileName();
+        const lastLaunchedProfile = getProfileFromName(lastLaunchedProfileName);
+
+        launchVersion(lastLaunchedProfile);
     });
     ipcMain.on("download", (_, index: number) => {
-        downloadVersion(index);
+        const lastLaunchedProfileName = getLastLaunchedProfileName();
+        const lastLaunchedProfile = getProfileFromName(lastLaunchedProfileName);
+        downloadVersion(index, lastLaunchedProfile);
     });
     ipcMain.on("filePick", pickFile);
-    ipcMain.on("setSelectedVersion", (_, index: number) => {
-        setSelectedVersion(index);
+    ipcMain.on("setSelectedProfile", (_, profile: IProfile) => {
+        setSelectedProfile(profile);
     });
     ipcMain.on("removeVersion", async (_, index: number) => {
         await removeVersion(index);

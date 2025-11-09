@@ -6,7 +6,7 @@ import { moveFontMetadataFile, moveExecutable } from "../../utils/move";
 import { addInstallation } from "./readVersions";
 import { launchVersion } from "../../events/responses/launchVersion";
 
-export async function install(file: string, window: Electron.BrowserWindow, isBeta: boolean, sideloaded = false) {
+export async function install(file: string, window: Electron.BrowserWindow, isBeta: boolean, sideloaded = false, profile?: IProfile ) {
     const versionNameRegex = /[^\\]*.msixvc$/;
     const versionName = file.match(versionNameRegex)[0].replace(".msixvc", "");
     const removeAppxCommand = `$name = (Get-AppxPackage -Name "${isBeta ? settings.previewPackageName : settings.releasePackageName}").PackageFullName; Remove-AppxPackage -Package $name;`;
@@ -50,9 +50,9 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
         fs.rm(tempFolder, { force: true, recursive: true }, () => {
             0;
         });
-    settings.updateLastLaunchedVersion(versionName);
+    settings.updateLastLaunchedProfileName(profile.name);
     await addInstallation(versionName);
-    launchVersion(versionName);
+    if (profile !== undefined) await launchVersion(profile);
     window.webContents.send("progressStage", "idle");
 }
 

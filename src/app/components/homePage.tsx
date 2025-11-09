@@ -4,15 +4,14 @@ import DropDown from "./dropDown";
 import { Button } from "@mui/material";
 
 interface IHomepageProps {
-    versions: string[];
+    profiles: IProfiles;
     availableVersions: string[];
-    selectedVersion: string;
+    selectedProfile: IProfile;
 }
 
 export default function HomePage(props: IHomepageProps) {
-
-    function selectVersion(index: number) {
-        window.electronAPI.send("setSelectedVersion", index);
+    function selectVersion(profile: IProfile) {
+        window.electronAPI.send("setSelectedProfile", profile);
     }
 
     function launchVersion() {
@@ -32,20 +31,19 @@ export default function HomePage(props: IHomepageProps) {
                 </Box>
             </Box>
             <Box sx={{ position: "fixed", bottom: "4rem", left: "1rem", width: "40%", zIndex: 2 }}>
-                <DropDown versions={props.versions} callback={selectVersion} enableNewButton={false} />
+                <DropDown profiles={props.profiles} callback={selectVersion} enableNewButton={false} />
             </Box>
-            {props.selectedVersion !== "" && (
+            {props.selectedProfile !== undefined && (
                 <Box sx={{ position: "fixed", bottom: "4rem", left: 0, width: "100%", zIndex: 1 }}>
                     <Box sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }}>
                         <Button variant="outlined" sx={{ fontSize: 20, backgroundColor: "#0A964F", color: "white", textShadow: "1px 1px 2px black", maxWidth: "360px" }} onClick={launchVersion}>
-                            {`Play ${props.selectedVersion}`}
+                            {`Play ${props.selectedProfile.version}`}
                         </Button>
                     </Box>
                 </Box>
             )}
             <Box sx={{ position: "fixed", bottom: "50%", left: 0, width: "100%", zIndex: 10 }}>
-                <Box sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }}>
-                </Box>
+                <Box sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }}></Box>
             </Box>
             <Box
                 sx={{

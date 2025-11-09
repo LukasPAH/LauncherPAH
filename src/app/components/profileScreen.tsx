@@ -86,8 +86,8 @@ export default function ProfileScreen(props: IButtonStackProps) {
                             >
                                 {"Open Profile Location"}
                             </Button>
-                            <div style={{ width: "1rem", height: "100%" }}></div>
-                            <RemoveModal profiles={props.profiles} index={index}></RemoveModal>
+                            <Box>{profile.name !== "Default" && profile.name !== "Preview" && <div style={{ width: "1rem", height: "100%" }}></div>}</Box>
+                            <Box>{profile.name !== "Default" && profile.name !== "Preview" && <RemoveModal profiles={props.profiles} index={index}></RemoveModal>}</Box>
                         </Box>
                         <div style={{ width: "1rem", height: "100%" }}></div>
                         <Divider sx={{ bgcolor: "#535353ff", width: "85%", justifySelf: "center" }}></Divider>
@@ -97,7 +97,7 @@ export default function ProfileScreen(props: IButtonStackProps) {
             <div style={{ width: 0, height: "1rem" }}></div>
             <Box sx={{ position: "fixed", bottom: "50%", left: 0, width: "100%", zIndex: 10 }}>
                 <Box sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }}>
-                    <AddVerionModal open={versionModal} callback={addProfile} availableVersions={props.availableVersions}></AddVerionModal>
+                    <AddVerionModal open={versionModal} callback={addProfile} availableVersions={props.availableVersions} profiles={props.profiles}></AddVerionModal>
                 </Box>
             </Box>
         </div>

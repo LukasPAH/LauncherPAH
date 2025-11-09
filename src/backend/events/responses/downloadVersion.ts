@@ -5,7 +5,7 @@ import { isVersionInstalled, prettifyVersionNumbers } from "../../managers/versi
 import { install } from "../../managers/version/install";
 import { getBackendVersionDB } from "../../managers/version/availableVersions";
 
-export async function downloadVersion(DBIndex: number) {
+export async function downloadVersion(DBIndex: number, profile: IProfile) {
     const window = BrowserWindow.getAllWindows()[0];
     window.webContents.send("startDownload", true);
     let filePath: string | undefined = undefined;
@@ -59,5 +59,5 @@ export async function downloadVersion(DBIndex: number) {
 
     const isBeta = versionName.toLowerCase().includes("minecraftwindowsbeta");
 
-    await install(filePath, window, isBeta);
+    await install(filePath, window, isBeta, false, profile);
 }

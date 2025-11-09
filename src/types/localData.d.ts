@@ -2,7 +2,7 @@ type Drive = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "
 
 interface ISettings {
     installDrive: Drive;
-    lastLaunchedVersion: false | string;
+    lastLaunchedProfile: string;
     profiles: IProfiles
 }
 

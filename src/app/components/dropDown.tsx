@@ -8,9 +8,9 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import AddIcon from "@mui/icons-material/Add";
 
 export interface IDropdownProps {
-    versions: string[];
+    profiles: IProfiles;
     enableNewButton?: boolean;
-    callback: (index: number) => void;
+    callback: (profile: IProfile) => void;
     newButtonCallback?: () => void;
 }
 
@@ -22,7 +22,8 @@ const StyledMenu = styled((props: MenuProps) => <Menu {...props} />)(() => ({
 }));
 
 export default function Dropdown(props: IDropdownProps) {
-    const { versions } = props;
+    const { profiles } = props;
+    const profilesArray = Object.entries(profiles);
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -92,7 +93,7 @@ export default function Dropdown(props: IDropdownProps) {
                         {"Add New Version"}
                     </MenuItem>
                 )}
-                {versions.map((version, index) => (
+                {profilesArray.map(([_, profile], index) => (
                     <MenuItem
                         sx={{
                             fontSize: 14,
@@ -110,11 +111,11 @@ export default function Dropdown(props: IDropdownProps) {
                         key={index}
                         onClick={() => {
                             handleClose();
-                            props.callback(index);
+                            props.callback(profile);
                         }}
                         disableRipple
                     >
-                        {version}
+                        {profile.name}
                     </MenuItem>
                 ))}
             </StyledMenu>

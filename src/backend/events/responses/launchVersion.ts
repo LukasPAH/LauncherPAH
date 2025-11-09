@@ -1,16 +1,26 @@
 import * as settings from "../../settings";
 import fs from "fs";
-import { getInstalledVersions } from "../../managers/version/readVersions";
 import * as child_process from "child_process";
+import { getVersionFolderFromName } from "../../managers/profile/readProfiles";
+import { getBackendVersionDB } from "../../managers/version/availableVersions";
+import { downloadVersion } from "./downloadVersion";
 
-export function launchInstalledVersion(index: number) {
-    const versions = getInstalledVersions();
-    const version = versions[index];
-    launchVersion(version);
+export async function launchInstalledVersion(profile: IProfile) {
+    await launchVersion(profile);
 }
 
-export function launchVersion(versionName: string) {
-    const versionLocation = settings.installationsLocation + "\\" + versionName + "\\Minecraft.Windows.exe";
+export async function launchVersion(profile: IProfile) {
+    const versionFolder = await getVersionFolderFromName(profile.name);
+    if (!versionFolder) {
+        const versions = await getBackendVersionDB();
+        let index = 0;
+        for (const [_, versionName] of versions) {
+            if (versionName === profile.version) break;
+            index++;
+        }
+        await downloadVersion(index, profile);
+    }
+    const versionLocation = settings.installationsLocation + "\\" + versionFolder + "\\Minecraft.Windows.exe";
     if (fs.existsSync(versionLocation)) child_process.spawn(versionLocation, { detached: true, stdio: "ignore" });
-    settings.updateLastLaunchedVersion(versionName);
+    settings.updateLastLaunchedProfileName(profile.name);
 }

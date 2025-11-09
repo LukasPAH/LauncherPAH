@@ -33,6 +33,13 @@ export function prettifyVersionNumbers(version: string): string {
     return majorVersion + "." + minorVersion;
 }
 
+export function uglifyVersionNumbers(version: string) {
+    version = version.replace("Release ", "").replace("Preview ", "");
+    const majorVersion = version.slice(0, -3);
+    const minorVersion = version.slice(-2);
+    return majorVersion + minorVersion;
+}
+
 export function isVersionInstalled(name: string): boolean {
     if (fs.existsSync(installLocation + "\\" + name + "\\Minecraft.Windows.exe")) return true;
     return false;

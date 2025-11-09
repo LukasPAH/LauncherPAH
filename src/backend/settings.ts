@@ -1,21 +1,25 @@
 import fs from "fs";
 import { getLatestRelease, getLatestPreview } from "./managers/version/availableVersions";
 import { loadProfilesOnLaunch } from "./managers/profile/readProfiles";
+import path from "path";
 
 const data = loadLocalData();
 export const launcherLocation = process.env.APPDATA + "\\LauncherPAH";
 export const installationsLocation = launcherLocation + "\\installations";
+export const profilesLocation = launcherLocation + "\\profiles";
 let drive = data.settings.installDrive;
 let defaultPreviewLocation = drive + ":\\XboxGames\\Minecraft Preview for Windows\\Content";
 let defaultReleaseLocation = drive + ":\\XboxGames\\Minecraft for Windows\\Content";
 export const releasePackageName = "Microsoft.MinecraftUWP";
 export const previewPackageName = "Microsoft.MinecraftWindowsBeta";
+export const GDKReleaseUsersFolder = path.join(process.env.APPDATA, "Minecraft Bedrock", "Users");
+export const GDKPreviewUsersFolder = path.join(process.env.APPDATA, "Minecraft Bedrock Preview", "Users");
 
 const defaultData: ILocalData = {
     file_version: 0,
     settings: {
         installDrive: "C",
-        lastLaunchedVersion: false,
+        lastLaunchedProfile: "Default",
         profiles: {
             default: {
                 name: "Default",
@@ -40,8 +44,8 @@ function loadLocalData(): ILocalData {
             localData.settings.installDrive = "C";
             fileNeedsUpdate = true;
         }
-        if (localData.settings.lastLaunchedVersion === undefined) {
-            localData.settings.lastLaunchedVersion = false;
+        if (localData.settings.lastLaunchedProfile === undefined) {
+            localData.settings.lastLaunchedProfile = "Default";
             fileNeedsUpdate = true;
         }
         if (localData.settings.profiles === undefined) {
@@ -76,13 +80,14 @@ function loadLocalData(): ILocalData {
 }
 
 function tryReadLocalData(): string | undefined {
+    if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH\\profiles")) fs.mkdirSync(process.env.APPDATA + "\\LauncherPAH\\profiles");
+    if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH\\installations")) fs.mkdirSync(process.env.APPDATA + "\\LauncherPAH\\installations");
     try {
         const contents = fs.readFileSync(process.env.APPDATA + "\\LauncherPAH\\data\\local_data.json").toString();
         return contents;
     } catch {
         if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH")) fs.mkdirSync(process.env.APPDATA + "\\LauncherPAH");
         if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH\\data")) fs.mkdirSync(process.env.APPDATA + "\\LauncherPAH\\data");
-        if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH\\installations")) fs.mkdirSync(process.env.APPDATA + "\\LauncherPAH\\installations");
         return undefined;
     }
 }
@@ -91,8 +96,8 @@ function writeLocalData(localData: ILocalData) {
     fs.writeFileSync(process.env.APPDATA + "\\LauncherPAH\\data\\local_data.json", JSON.stringify(localData, null, 4));
 }
 
-export function updateLastLaunchedVersion(version: string) {
-    data.settings.lastLaunchedVersion = version;
+export function updateLastLaunchedProfileName(profileName: string) {
+    data.settings.lastLaunchedProfile = profileName;
     writeLocalData(data);
 }
 
@@ -116,8 +121,8 @@ export function getDefaultPreviewLocation() {
     return defaultPreviewLocation;
 }
 
-export function getLastLaunchedVersion() {
-    return data.settings.lastLaunchedVersion;
+export function getLastLaunchedProfileName() {
+    return data.settings.lastLaunchedProfile;
 }
 
 export async function getDefaultProfileVersion() {
@@ -162,4 +167,8 @@ export function setProfileVersion(profile: string, name: string, version: string
 export function removeProfileSetting(profile: string) {
     delete data.settings.profiles[profile];
     writeLocalData(data);
+}
+
+export function getAllProfiles() {
+    return data.settings.profiles
 }

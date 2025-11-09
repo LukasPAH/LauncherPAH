@@ -1,34 +1,16 @@
-import { updateLastLaunchedVersion } from "../../settings";
+import { updateLastLaunchedProfileName } from "../../settings";
 import { getInstalledVersions, prettifyVersionNumbers } from "../../managers/version/readVersions";
 import { BrowserWindow } from "electron";
 
-export async function setSelectedVersion(index: number) {
+export async function setSelectedProfile(profile: IProfile) {
     const window = BrowserWindow.getAllWindows()[0];
-    const versions = getInstalledVersions();
-    updateLastLaunchedVersion(versions[index]);
+    updateLastLaunchedProfileName(profile.name);
 
-    const versionNumber = prettifyVersionNumbers(versions[index]);
-
-    let type = "Release ";
-    if (versions[index].toLowerCase().includes("minecraftwindowsbeta")) type = "Preview ";
-    const sideloadedText = versions[index].toLowerCase().includes("_sideloaded") ? " (sideloaded)" : "";
-
-    window.webContents.send("selectedVersion", type + versionNumber + sideloadedText);
+    window.webContents.send("selectedProfile", profile);
 }
 
-export async function setSelectedVersionOnAppStart(versionName: string | false) {
+export async function setSelectedProfileOnStart(profile: IProfile) {
     const window = BrowserWindow.getAllWindows()[0];
 
-    if (versionName === false) {
-        window.webContents.send("selectedVersion", versionName);
-        return;
-    }
-
-    const versionNumber = prettifyVersionNumbers(versionName);
-
-    let type = "Release ";
-    if (versionName.toLowerCase().includes("minecraftwindowsbeta")) type = "Preview ";
-    const sideloadedText = versionName.toLowerCase().includes("_sideloaded") ? " (sideloaded)" : "";
-
-    window.webContents.send("selectedVersion", type + versionNumber + sideloadedText);
+    window.webContents.send("selectedProfile", profile);
 }
