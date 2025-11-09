@@ -31,7 +31,7 @@ export default function HomePage(props: IHomepageProps) {
                 </Box>
             </Box>
             <Box sx={{ position: "fixed", bottom: "4rem", left: "1rem", width: "40%", zIndex: 2 }}>
-                <DropDown profiles={props.profiles} callback={selectVersion} enableNewButton={false} />
+                <DropDown profiles={props.profiles} callback={selectVersion} enableNewButton={false} selectedProfle={props.selectedProfile}/>
             </Box>
             {props.selectedProfile !== undefined && (
                 <Box sx={{ position: "fixed", bottom: "4rem", left: 0, width: "100%", zIndex: 1 }}>

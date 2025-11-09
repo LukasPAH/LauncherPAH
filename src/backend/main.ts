@@ -61,10 +61,13 @@ app.on("ready", async () => {
     ipcMain.on("UILoaded", async () => {
         await readInstalledVersions();
         await getAvailableVersions();
-        const lastLaunchedProfileName = getLastLaunchedProfileName();
-        const profile = getProfileFromName(lastLaunchedProfileName);
-        await setSelectedProfileOnStart(profile);
         await updateDefaultProfileVersionsOnLaunch();
+        const lastLaunchedProfileName = getLastLaunchedProfileName();
+        let profile = getProfileFromName(lastLaunchedProfileName);
+        if (profile === undefined) {
+            profile = getProfileFromName("Default")
+        }
+        await setSelectedProfileOnStart(profile);
     });
     ipcMain.on("launchVersion", () => {
         const lastLaunchedProfileName = getLastLaunchedProfileName();

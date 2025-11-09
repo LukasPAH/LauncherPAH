@@ -6,9 +6,11 @@ import Menu, { MenuProps } from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import AddIcon from "@mui/icons-material/Add";
+import { Typography } from "@mui/material";
 
 export interface IDropdownProps {
     profiles: IProfiles;
+    selectedProfle: IProfile;
     enableNewButton?: boolean;
     callback: (profile: IProfile) => void;
     newButtonCallback?: () => void;
@@ -35,19 +37,28 @@ export default function Dropdown(props: IDropdownProps) {
 
     return (
         <Box>
-            <Button
-                sx={{ backgroundColor: "rgb(55, 65, 81)", minWidth: 180, color: "white" }}
-                id="demo-customized-button"
-                aria-controls={open ? "demo-customized-menu" : undefined}
-                aria-haspopup="true"
-                aria-expanded={open ? "true" : undefined}
-                variant="contained"
-                disableElevation
-                onClick={handleClick}
-                endIcon={<KeyboardArrowDownIcon />}
-            >
-                Select Version
-            </Button>
+            <Box>
+                <Button
+                    sx={{ backgroundColor: "rgb(55, 65, 81)", minWidth: 180, color: "white", display: "flex", flexDirection: "column" }}
+                    id="demo-customized-button"
+                    aria-controls={open ? "demo-customized-menu" : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={open ? "true" : undefined}
+                    variant="contained"
+                    disableElevation
+                    onClick={handleClick}
+                    endIcon={
+                        <KeyboardArrowDownIcon
+                            sx={{
+                                color: "white",
+                            }}
+                        />
+                    }
+                >
+                    {props.selectedProfle.name}
+                <Typography sx={{ textTransform: "none", fontSize: 12, color: "white" }}>{props.selectedProfle.version}</Typography>
+                </Button>
+            </Box>
             <StyledMenu
                 id="demo-customized-menu"
                 slotProps={{
