@@ -92,7 +92,8 @@ export default function ScrollDialog(props: IAddVersionProps) {
                         {props.availableVersions.map((option, index) => (
                             <Box key={`box${index}`}>
                                 {(((option.toLowerCase().includes(filterText) || filterText === "") && !option.toLowerCase().includes("sideloaded")) ||
-                                    (option.toLowerCase().includes("sideloaded") && filterText === "sideloaded")) && (
+                                    (option.toLowerCase().includes("sideloaded") && filterText === "sideloaded") ||
+                                    filterText === "") && (
                                     <FormControlLabel
                                         sx={{ width: "300px", color: "white" }}
                                         value={option}
