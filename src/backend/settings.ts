@@ -148,7 +148,9 @@ export async function getDefaultPreviewProfileVersion() {
 }
 
 export async function updateDefaultProfileVersionsOnLaunch() {
+    data.settings.profiles.default = {} as IProfile;
     data.settings.profiles.default = await getDefaultProfileVersion();
+    data.settings.profiles.defaultPreview = {} as IProfile;
     data.settings.profiles.defaultPreview = await getDefaultPreviewProfileVersion();
     loadProfilesOnLaunch(data.settings.profiles);
     writeLocalData(data);
@@ -170,5 +172,5 @@ export function removeProfileSetting(profile: string) {
 }
 
 export function getAllProfiles() {
-    return data.settings.profiles
+    return data.settings.profiles;
 }

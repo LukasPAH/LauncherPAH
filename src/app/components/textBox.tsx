@@ -32,7 +32,7 @@ export default function TextBox(props: ITextFieldProps) {
 
     if (disallowed) {
         return (
-            <Box component="form" sx={{ "& .MuiTextField-root": { m: 1, width: "25ch", color: "white" } }} noValidate autoComplete="off">
+            <Box component="form" sx={{ "& .MuiTextField-root": { m: 1, width: "38ch", color: "white" } }} noValidate autoComplete="off">
                 <div>
                     <TextField
                         sx={{ input: { color: "white" } }}
@@ -52,7 +52,7 @@ export default function TextBox(props: ITextFieldProps) {
     }
 
     return (
-        <Box component="form" sx={{ "& .MuiTextField-root": { m: 1, width: "25ch", color: "#14a15bff" } }} noValidate autoComplete="off">
+        <Box component="form" sx={{ "& .MuiTextField-root": { m: 1, width: "38ch", color: "#14a15bff" } }} noValidate autoComplete="off">
             <div>
                 <TextField
                     sx={{

@@ -8,12 +8,20 @@ import DialogTitle from "@mui/material/DialogTitle";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
 import TextBox from "./textBox";
+import CustomRadioGroup from "./radioGroup";
+import Box from "@mui/material/Box";
 
 interface IAddVersionProps {
     open: boolean;
     callback: (index: number, profileName: string) => void;
     availableVersions: string[];
     profiles: IProfiles;
+}
+
+enum FilterEnum {
+    release = 0,
+    preview,
+    sideloaded,
 }
 
 export default function ScrollDialog(props: IAddVersionProps) {
@@ -28,6 +36,7 @@ export default function ScrollDialog(props: IAddVersionProps) {
     const [selectedVersionIndex, setSelectedVersionIndex] = React.useState(-1);
     const [canSubmit, setCanSubmit] = React.useState(false);
     const [text, setText] = React.useState("");
+    const [filterText, setFilterText] = React.useState("");
 
     function textChangeCallback(isAllowed: boolean) {
         setCanSubmit(isAllowed);
@@ -40,12 +49,30 @@ export default function ScrollDialog(props: IAddVersionProps) {
     function resetStates() {
         setSelectedVersionIndex(-1);
         setCanSubmit(false);
+        setFilterText("");
+    }
+
+    function filter(index: number) {
+        setFilterText(FilterEnum[index]);
+        console.log(FilterEnum[index]);
     }
 
     return (
         <React.Fragment>
             <Dialog
-                sx={{ "& .MuiDialog-paper": { backgroundColor: "#242424ff" } }}
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    "& .MuiDialog-paper": {
+                        backgroundColor: "#242424ff",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    },
+                }}
                 open={open}
                 onClose={() => {
                     props.callback(-1, "");
@@ -55,22 +82,29 @@ export default function ScrollDialog(props: IAddVersionProps) {
                 disableRestoreFocus={true}
             >
                 <TextBox disallowedValues={disallowedValues} nameAllowedCallback={textChangeCallback} nameCallback={textCallback}></TextBox>
-                <DialogTitle sx={{ color: "white" }} id="scroll-dialog-title">
+                <DialogTitle sx={{ color: "white", padding: 0 }} id="scroll-dialog-title">
                     Select Version
                 </DialogTitle>
+                <Box sx={{ height: "1rem" }}></Box>
+                <CustomRadioGroup callback={filter} options={["Release", "Preview", "Sideloaded"]} title="Filter by:"></CustomRadioGroup>
                 <DialogContent>
                     <RadioGroup>
                         {props.availableVersions.map((option, index) => (
-                            <FormControlLabel
-                                sx={{ width: "300px", color: "white" }}
-                                value={option}
-                                key={option}
-                                control={<Radio />}
-                                label={option}
-                                onClick={() => {
-                                    setSelectedVersionIndex(index);
-                                }}
-                            ></FormControlLabel>
+                            <Box key={`box${index}`}>
+                                {(((option.toLowerCase().includes(filterText) || filterText === "") && !option.toLowerCase().includes("sideloaded")) ||
+                                    (option.toLowerCase().includes("sideloaded") && filterText === "sideloaded")) && (
+                                    <FormControlLabel
+                                        sx={{ width: "300px", color: "white" }}
+                                        value={option}
+                                        key={option}
+                                        control={<Radio />}
+                                        label={option}
+                                        onClick={() => {
+                                            setSelectedVersionIndex(index);
+                                        }}
+                                    ></FormControlLabel>
+                                )}
+                            </Box>
                         ))}
                     </RadioGroup>
                 </DialogContent>

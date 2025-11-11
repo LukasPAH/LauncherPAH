@@ -5,8 +5,9 @@ import { run } from "../../utils/powershell";
 import { moveFontMetadataFile, moveExecutable } from "../../utils/move";
 import { addInstallation } from "./readVersions";
 import { launchVersion } from "../../events/responses/launchVersion";
+import path from "path";
 
-export async function install(file: string, window: Electron.BrowserWindow, isBeta: boolean, sideloaded = false, profile?: IProfile ) {
+export async function install(file: string, window: Electron.BrowserWindow, isBeta: boolean, sideloaded = false, profile?: IProfile) {
     const versionNameRegex = /[^\\]*.msixvc$/;
     const versionName = file.match(versionNameRegex)[0].replace(".msixvc", "");
     const removeAppxCommand = `$name = (Get-AppxPackage -Name "${isBeta ? settings.previewPackageName : settings.releasePackageName}").PackageFullName; Remove-AppxPackage -Package $name;`;
@@ -38,6 +39,8 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
     } catch {
         //
     }
+
+    await fsAsync.cp(path.join(defaultLocation, "appxmanifest.xml"), path.join(targetLocation, "appxmanifest.xml"));
 
     await moveFontMetadataFile(defaultLocation, targetLocation);
 
