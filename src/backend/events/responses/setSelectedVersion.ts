@@ -1,5 +1,4 @@
 import { updateLastLaunchedProfileName } from "../../settings";
-import { getInstalledVersions, prettifyVersionNumbers } from "../../managers/version/readVersions";
 import { BrowserWindow } from "electron";
 
 export async function setSelectedProfile(profile: IProfile) {

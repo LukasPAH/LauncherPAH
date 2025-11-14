@@ -18,7 +18,7 @@ export async function getBackendVersionDB() {
 
 export async function getLatestRelease() {
     await getBackendVersionDB();
-    const releaseVersions = backendVersionDB.filter((value) => value[1].includes("Release"));
+    const releaseVersions = backendVersionDB.filter((value) => value[1].includes("Release") && !value[1].toLowerCase().includes("sideloaded"));
 
     const latestRelease = releaseVersions[releaseVersions.length - 1];
     const latestReleaseName = latestRelease[1];

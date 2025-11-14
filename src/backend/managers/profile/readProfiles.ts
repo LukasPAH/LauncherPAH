@@ -1,4 +1,13 @@
-import { setProfileVersion, removeProfileSetting, GDKPreviewUsersFolder, GDKReleaseUsersFolder, getAllProfiles, installationsLocation } from "../../settings";
+import {
+    setProfileVersion,
+    removeProfileSetting,
+    GDKPreviewUsersFolder,
+    GDKReleaseUsersFolder,
+    getAllProfiles,
+    installationsLocation,
+    getLastLaunchedProfileName,
+    updateLastLaunchedProfileName,
+} from "../../settings";
 import { getBackendVersionDB } from "../version/availableVersions";
 import { BrowserWindow } from "electron";
 import { uglifyVersionNumbers } from "../version/readVersions";
@@ -36,6 +45,16 @@ export function removeProfile(name: string) {
 export async function editProfile(name: string, index: number, beforeName: string) {
     const before = beforeName.replaceAll(" ", "_");
     const after = name.replaceAll(" ", "_");
+    if (before === after) {
+        const versions = await getBackendVersionDB();
+        const [_, versionName] = versions[index];
+        profiles[before] = {
+            name: name,
+            version: versionName,
+        };
+        readProfiles();
+        return;
+    }
     removeProfile(before);
     await addProfile(after, index);
 }
@@ -46,7 +65,17 @@ export function loadProfilesOnLaunch(profilesSetting: IProfiles) {
 }
 
 export function readProfiles() {
+    const lastProfile = getLastLaunchedProfileName();
+    const keys = Object.keys(profiles);
+    const index = keys.findIndex((key) => {
+        return key === lastProfile;
+    });
     const window = BrowserWindow.getAllWindows()[0];
+    if (index === -1) {
+        updateLastLaunchedProfileName("Default");
+        const profile = getProfileFromName("Default");
+        window.webContents.send("selectedProfile", profile);
+    }
     window.webContents.send("createdProfiles", profiles);
 }
 
