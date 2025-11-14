@@ -6,5 +6,5 @@ export async function addProfileEventResponse(profile: string, index: number, be
 }
 
 export async function removeProfileEventResponse(profile: string) {
-    removeProfile(profile);
+    await removeProfile(profile);
 }

@@ -1,5 +1,5 @@
 import { cp, mkdir, rename } from "node:fs/promises";
-import { existsSync, symlink } from "fs";
+import { existsSync } from "fs";
 import { GDKPreviewUsersFolder, GDKReleaseUsersFolder, profilesLocation } from "../../settings";
 import path from "node:path";
 import { isJunction } from "../../utils/isJunction";

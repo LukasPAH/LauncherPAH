@@ -37,7 +37,7 @@ export default function Dropdown(props: IDropdownProps) {
 
     return (
         <Box>
-            <Box>
+            <Box sx={{maxWidth:180}}>
                 <Button
                     sx={{ backgroundColor: "rgb(55, 65, 81)", minWidth: 180, color: "white", display: "flex", flexDirection: "column" }}
                     id="demo-customized-button"

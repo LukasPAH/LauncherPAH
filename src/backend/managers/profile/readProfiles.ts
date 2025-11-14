@@ -1,17 +1,10 @@
-import {
-    setProfileVersion,
-    removeProfileSetting,
-    GDKPreviewUsersFolder,
-    GDKReleaseUsersFolder,
-    getAllProfiles,
-    installationsLocation,
-    getLastLaunchedProfileName,
-    updateLastLaunchedProfileName,
-} from "../../settings";
+import { setProfileVersion, removeProfileSetting, getAllProfiles, installationsLocation, getLastLaunchedProfileName, updateLastLaunchedProfileName, profilesLocation } from "../../settings";
 import { getBackendVersionDB } from "../version/availableVersions";
 import { BrowserWindow } from "electron";
 import { uglifyVersionNumbers } from "../version/readVersions";
 import * as fsAsync from "fs/promises";
+import * as fs from "fs";
+import path from "path";
 
 let profiles: IProfiles = {};
 
@@ -24,20 +17,18 @@ export async function addProfile(name: string, versionIndex: number) {
         version: versionName,
     };
 
-    if (versionName.includes("Preview")) {
-        console.log(GDKPreviewUsersFolder);
-    }
-    if (!versionName.includes("Preview")) {
-        console.log(GDKReleaseUsersFolder);
-    }
+    const profileFolder = path.join(profilesLocation, name);
+    if (!fs.existsSync(profileFolder)) await fsAsync.mkdir(profileFolder);
 
     setProfileVersion(profile, name, versionName);
     readProfiles();
 }
 
-export function removeProfile(name: string) {
+export async function removeProfile(name: string) {
     const profile = name.replaceAll(" ", "_");
     delete profiles[profile];
+    const profileFolder = path.join(profilesLocation, name);
+    if (fs.existsSync(profileFolder)) await fsAsync.rmdir(profileFolder);
     removeProfileSetting(profile);
     readProfiles();
 }
@@ -55,7 +46,7 @@ export async function editProfile(name: string, index: number, beforeName: strin
         readProfiles();
         return;
     }
-    removeProfile(before);
+    await removeProfile(before);
     await addProfile(after, index);
 }
 
