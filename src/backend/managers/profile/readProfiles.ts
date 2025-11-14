@@ -33,6 +33,13 @@ export function removeProfile(name: string) {
     readProfiles();
 }
 
+export async function editProfile(name: string, index: number, beforeName: string) {
+    const before = beforeName.replaceAll(" ", "_");
+    const after = name.replaceAll(" ", "_");
+    removeProfile(before);
+    await addProfile(after, index);
+}
+
 export function loadProfilesOnLaunch(profilesSetting: IProfiles) {
     profiles = profilesSetting;
     readProfiles();

@@ -91,7 +91,7 @@ app.on("ready", async () => {
         await openFolder(index);
     });
     ipcMain.on("addProfile", async (_, data) => {
-        await addProfileEventResponse(data.name, data.index);
+        await addProfileEventResponse(data.name, data.index, data.beforeName);
     });
     ipcMain.on("removeProfile", (_, name) => {
         removeProfileEventResponse(name);

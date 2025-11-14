@@ -8,14 +8,17 @@ import DialogTitle from "@mui/material/DialogTitle";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
 import TextBox from "./textBox";
+import DefaultTextBox from "./defaultTextBox";
 import CustomRadioGroup from "./radioGroup";
 import Box from "@mui/material/Box";
 
 interface IAddVersionProps {
     open: boolean;
-    callback: (index: number, profileName: string) => void;
+    callback: (index: number, profileName: string, beforeProfileName?: string) => void;
     availableVersions: string[];
     profiles: IProfiles;
+    selectedProfile?: IProfile;
+    canSubmit: boolean;
 }
 
 enum FilterEnum {
@@ -25,7 +28,7 @@ enum FilterEnum {
 }
 
 export default function ScrollDialog(props: IAddVersionProps) {
-    const { open, profiles } = props;
+    const { open, profiles, selectedProfile } = props;
 
     const profileValues = Object.values(profiles);
     const disallowedValues = [];
@@ -34,9 +37,19 @@ export default function ScrollDialog(props: IAddVersionProps) {
     }
 
     const [selectedVersionIndex, setSelectedVersionIndex] = React.useState(-1);
-    const [canSubmit, setCanSubmit] = React.useState(false);
+    const [canSubmit, setCanSubmit] = React.useState(props.canSubmit);
     const [text, setText] = React.useState("");
     const [filterText, setFilterText] = React.useState("");
+    const [selectedVersionName, setSelectedVersionName] = React.useState("");
+
+    React.useEffect(() => {
+        setCanSubmit(props.canSubmit);
+        if (props.canSubmit && props.selectedProfile !== undefined) {
+            const index = props.availableVersions.indexOf(props.selectedProfile.version);
+            setSelectedVersionIndex(index);
+            setText(props.selectedProfile.name);
+        }
+    }, [props.canSubmit]);
 
     function textChangeCallback(isAllowed: boolean) {
         setCanSubmit(isAllowed);
@@ -50,16 +63,17 @@ export default function ScrollDialog(props: IAddVersionProps) {
         setSelectedVersionIndex(-1);
         setCanSubmit(false);
         setFilterText("");
+        setSelectedVersionName("");
     }
 
     function filter(index: number) {
         setFilterText(FilterEnum[index]);
-        console.log(FilterEnum[index]);
     }
 
     return (
         <React.Fragment>
             <Dialog
+                transitionDuration={0}
                 sx={{
                     display: "flex",
                     flexDirection: "column",
@@ -81,14 +95,24 @@ export default function ScrollDialog(props: IAddVersionProps) {
                 scroll={"paper"}
                 disableRestoreFocus={true}
             >
-                <TextBox disallowedValues={disallowedValues} nameAllowedCallback={textChangeCallback} nameCallback={textCallback}></TextBox>
+                <Box>
+                    {selectedProfile === undefined && <TextBox disallowedValues={disallowedValues} nameAllowedCallback={textChangeCallback} nameCallback={textCallback}></TextBox>}
+                    {selectedProfile !== undefined && (
+                        <DefaultTextBox defaultValue={selectedProfile.name} disallowedValues={disallowedValues} nameAllowedCallback={textChangeCallback} nameCallback={textCallback}></DefaultTextBox>
+                    )}
+                </Box>
                 <DialogTitle sx={{ color: "white", padding: 0 }} id="scroll-dialog-title">
                     Select Version
                 </DialogTitle>
                 <Box sx={{ height: "1rem" }}></Box>
                 <CustomRadioGroup callback={filter} options={["Release", "Preview", "Sideloaded"]} title="Filter by:"></CustomRadioGroup>
                 <DialogContent>
-                    <RadioGroup>
+                    <RadioGroup
+                        value={selectedVersionName === "" ? (selectedProfile?.version ?? "") : selectedVersionName}
+                        onChange={(event) => {
+                            setSelectedVersionName(event.target.value);
+                        }}
+                    >
                         {props.availableVersions.map((option, index) => (
                             <Box key={`box${index}`}>
                                 {(((option.toLowerCase().includes(filterText) || filterText === "") && !option.toLowerCase().includes("sideloaded")) ||
@@ -113,15 +137,15 @@ export default function ScrollDialog(props: IAddVersionProps) {
                     <Button
                         onClick={() => {
                             props.callback(-1, "");
-                            resetStates();
                         }}
                     >
                         Cancel
                     </Button>
                     <Button
                         onClick={() => {
+                            console.log(canSubmit, selectedVersionIndex);
                             if (canSubmit && selectedVersionIndex !== -1) {
-                                props.callback(selectedVersionIndex, text);
+                                props.callback(selectedVersionIndex, text, props.selectedProfile?.name);
                                 resetStates();
                             }
                         }}

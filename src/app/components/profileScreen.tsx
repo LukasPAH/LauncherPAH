@@ -9,6 +9,7 @@ import Modal from "@mui/material/Modal";
 import { SxProps } from "@mui/material";
 import Divider from "@mui/material/Divider";
 import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
 import AddVerionModal from "./addVersion";
 
 interface IButtonStackProps {
@@ -29,10 +30,12 @@ export default function ProfileScreen(props: IButtonStackProps) {
     const profiles = Object.entries(props.profiles);
 
     const [versionModal, setVersionModal] = React.useState(false);
+    const [selectedProfile, setSelectedProfile] = React.useState(undefined) as [IProfile, React.Dispatch<React.SetStateAction<IProfile | undefined>>];
 
-    function addProfile(index: number, profileName: string) {
+    function addProfile(index: number, profileName: string, beforeProfileName?: string) {
         setVersionModal(false);
-        if (index !== -1) window.electronAPI.send("addProfile", { name: profileName, index: index });
+        setSelectedProfile(undefined);
+        if (index !== -1) window.electronAPI.send("addProfile", { name: profileName, index: index, beforeName: beforeProfileName });
     }
 
     return (
@@ -85,6 +88,20 @@ export default function ProfileScreen(props: IButtonStackProps) {
                                 }}
                             >
                                 {"Open Profile Location"}
+                            </Button>{" "}
+                            <Button
+                                startIcon={<EditIcon></EditIcon>}
+                                sx={{
+                                    color: "rgba(156, 170, 201, 1)",
+                                }}
+                                key={`edit  {index}`}
+                                onClick={() => {
+                                    setVersionModal(true);
+                                    setSelectedProfile(profile);
+                                }}
+                            >
+                                <div style={{ width: "4px", height: 0 }}></div>
+                                {"Edit"}
                             </Button>
                             <Box>{profile.name !== "Default" && profile.name !== "Preview" && <div style={{ width: "1rem", height: "100%" }}></div>}</Box>
                             <Box>{profile.name !== "Default" && profile.name !== "Preview" && <RemoveModal profiles={props.profiles} index={index}></RemoveModal>}</Box>
@@ -97,7 +114,14 @@ export default function ProfileScreen(props: IButtonStackProps) {
             <div style={{ width: 0, height: "1rem" }}></div>
             <Box sx={{ position: "fixed", bottom: "50%", left: 0, width: "100%", zIndex: 10 }}>
                 <Box sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }}>
-                    <AddVerionModal open={versionModal} callback={addProfile} availableVersions={props.availableVersions} profiles={props.profiles}></AddVerionModal>
+                    <AddVerionModal
+                        open={versionModal}
+                        callback={addProfile}
+                        availableVersions={props.availableVersions}
+                        profiles={props.profiles}
+                        selectedProfile={selectedProfile}
+                        canSubmit={selectedProfile === undefined ? false : true}
+                    ></AddVerionModal>
                 </Box>
             </Box>
         </div>
