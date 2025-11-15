@@ -24,29 +24,34 @@ export async function addProfile(name: string, versionIndex: number) {
     readProfiles();
 }
 
-export async function removeProfile(name: string) {
+export async function removeProfile(name: string, removeFolder = true) {
     const profile = name.replaceAll(" ", "_");
     delete profiles[profile];
     const profileFolder = path.join(profilesLocation, name);
-    if (fs.existsSync(profileFolder)) await fsAsync.rmdir(profileFolder, { recursive: true });
+    if (fs.existsSync(profileFolder) && removeFolder === true) await fsAsync.rmdir(profileFolder, { recursive: true });
     removeProfileSetting(profile);
     readProfiles();
 }
 
 export async function editProfile(name: string, index: number, beforeName: string) {
-    const before = beforeName.replaceAll(" ", "_");
-    const after = name.replaceAll(" ", "_");
+    const before = beforeName;
+    const after = name;
     if (before === after) {
         const versions = await getBackendVersionDB();
         const [_, versionName] = versions[index];
-        profiles[before] = {
+        console.log(profiles);
+        profiles[before.replaceAll(" ", "_")] = {
             name: name,
             version: versionName,
         };
+        console.log(profiles)
         readProfiles();
         return;
     }
-    await removeProfile(before);
+    await removeProfile(before, false);
+    const beforeProfileLocation = path.join(profilesLocation, beforeName);
+    const afterProfileLocation = path.join(profilesLocation, name);
+    if (fs.existsSync(beforeProfileLocation)) await fsAsync.rename(beforeProfileLocation, afterProfileLocation);
     await addProfile(after, index);
 }
 
