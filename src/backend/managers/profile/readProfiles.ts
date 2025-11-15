@@ -39,7 +39,6 @@ export async function editProfile(name: string, index: number, beforeName: strin
     if (before === after) {
         const versions = await getBackendVersionDB();
         const [_, versionName] = versions[index];
-        console.log(profiles);
         profiles[before.replaceAll(" ", "_")] = {
             name: name,
             version: versionName,
