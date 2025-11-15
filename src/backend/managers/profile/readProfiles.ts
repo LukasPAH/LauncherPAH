@@ -28,7 +28,7 @@ export async function removeProfile(name: string) {
     const profile = name.replaceAll(" ", "_");
     delete profiles[profile];
     const profileFolder = path.join(profilesLocation, name);
-    if (fs.existsSync(profileFolder)) await fsAsync.rmdir(profileFolder);
+    if (fs.existsSync(profileFolder)) await fsAsync.rmdir(profileFolder, { recursive: true });
     removeProfileSetting(profile);
     readProfiles();
 }

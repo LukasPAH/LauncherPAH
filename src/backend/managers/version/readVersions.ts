@@ -5,7 +5,7 @@ import fs from "fs";
 
 const installLocation = settings.launcherLocation + "\\installations";
 
-const installedVersions: string[] = [];
+let installedVersions: string[] = [];
 
 export async function readInstalledVersions(): Promise<void> {
     const window = BrowserWindow.getAllWindows()[0];
@@ -63,8 +63,7 @@ export async function removeInstalledVersion(version: string) {
     await readInstalledVersions();
 }
 
-export async function addInstallation(version: string) {
-    installedVersions.push(version);
-    installedVersions.sort();
+export async function addInstallation() {
+    installedVersions = [];
     await readInstalledVersions();
 }

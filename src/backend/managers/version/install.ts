@@ -54,7 +54,7 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
             0;
         });
     if (profile !== undefined) settings.updateLastLaunchedProfileName(profile.name);
-    await addInstallation(versionName);
+    await addInstallation();
     if (profile !== undefined) await launchVersion(profile);
     window.webContents.send("progressStage", "idle");
 }
