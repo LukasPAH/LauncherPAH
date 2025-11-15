@@ -91,7 +91,27 @@ export async function getVersionFolderFromName(name: string): Promise<string | u
     const uglyName = uglifyVersionNumbers(versionName);
     const installations = await fsAsync.readdir(installationsLocation, { recursive: false });
 
-    for (const installation of installations) {
-        if (installation.includes(uglyName)) return installation;
+    const sideloadedInstallations = installations.filter((value) => {
+        return value.toLowerCase().includes("sideloaded");
+    });
+
+    const nonSideloadedInstallations = installations.filter((value) => {
+        return !value.toLowerCase().includes("sideloaded");
+    });
+
+    if (name.toLowerCase().includes("sideloaded")) {
+        for (const installation of sideloadedInstallations) {
+            if (installation.includes(uglyName)) {
+                return installation;
+            }
+        }
+    }
+
+    if (!name.toLowerCase().includes("sideloaded")) {
+        for (const installation of nonSideloadedInstallations) {
+            if (installation.includes(uglyName)) {
+                return installation;
+            }
+        }
     }
 }
