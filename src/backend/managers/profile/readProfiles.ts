@@ -99,7 +99,7 @@ export async function getVersionFolderFromName(name: string): Promise<string | u
         return !value.toLowerCase().includes("sideloaded");
     });
 
-    if (name.toLowerCase().includes("sideloaded")) {
+    if (versionName.toLowerCase().includes("sideloaded")) {
         for (const installation of sideloadedInstallations) {
             if (installation.includes(uglyName)) {
                 return installation;
@@ -107,7 +107,7 @@ export async function getVersionFolderFromName(name: string): Promise<string | u
         }
     }
 
-    if (!name.toLowerCase().includes("sideloaded")) {
+    if (!versionName.toLowerCase().includes("sideloaded")) {
         for (const installation of nonSideloadedInstallations) {
             if (installation.includes(uglyName)) {
                 return installation;
