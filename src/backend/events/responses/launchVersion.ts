@@ -6,6 +6,7 @@ import { getBackendVersionDB } from "../../managers/version/availableVersions";
 import { downloadVersion } from "./downloadVersion";
 import path from "path";
 import { isJunction } from "../../utils/isJunction";
+import { isPreviewRunning, isReleaseRunning } from "../../utils/isGameRunning";
 
 export async function launchInstalledVersion(profile: IProfile) {
     await launchVersion(profile);
@@ -25,14 +26,17 @@ export async function launchVersion(profile: IProfile) {
     const profileFolder = path.join(settings.profilesLocation, profile.name);
     const releaseFolder = profile.version.toLowerCase().includes("preview") ? settings.GDKPreviewUsersFolder : settings.GDKReleaseUsersFolder;
     const isJunct = await isJunction(releaseFolder);
-    if (isJunct) {
-        fs.unlink(releaseFolder, (error) => {
+    const isGameRunning = profile.version.toLowerCase().includes("preview") ? await isPreviewRunning() : await isReleaseRunning();
+    if (!isGameRunning) {
+        if (isJunct) {
+            fs.unlink(releaseFolder, (error) => {
+                if (error !== null) console.log(error);
+            });
+        }
+        fs.symlink(profileFolder, releaseFolder, "junction", (error) => {
             if (error !== null) console.log(error);
         });
     }
-    fs.symlink(profileFolder, releaseFolder, "junction", (error) => {
-        if (error !== null) console.log(error);
-    });
     const versionLocation = settings.installationsLocation + "\\" + versionFolder + "\\Minecraft.Windows.exe";
     if (fs.existsSync(versionLocation)) child_process.spawn(versionLocation, { detached: true, stdio: "ignore" });
     settings.updateLastLaunchedProfileName(profile.name);
