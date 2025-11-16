@@ -14,6 +14,8 @@ import { addProfileEventResponse, removeProfileEventResponse } from "./events/re
 import { tryMigrageGDKUserData } from "./managers/profile/profileFolder";
 import { getProfileFromName } from "./managers/profile/readProfiles";
 
+let window: BrowserWindow | null = null;
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
     app.quit();
@@ -52,12 +54,24 @@ const createWindow = async () => {
     return mainWindow;
 };
 
+// Ensure there is only ever one instance of the application loaded.
+// If the user tries to launch another instance of the app, close
+// the second instance immediately and re-focus the first instance.
+if (!app.requestSingleInstanceLock()) {
+    app.quit();
+} else {
+    app.on("second-instance", () => {
+        if (window === null) return;
+        if (window.isMinimized()) window.restore();
+        window.focus();
+    });
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", async () => {
-    await createWindow();
-    tryMigrageGDKUserData();
+    if (window === null) window = await createWindow();
     ipcMain.on("UILoaded", async () => {
         await readInstalledVersions();
         await getAvailableVersions();
@@ -115,9 +129,5 @@ app.on("activate", () => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) {
         createWindow();
-    }
-    // There can only be one.
-    if (BrowserWindow.getAllWindows().length === 1) {
-        app.quit();
     }
 });
