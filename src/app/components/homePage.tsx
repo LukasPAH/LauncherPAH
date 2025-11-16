@@ -22,12 +22,12 @@ export default function HomePage(props: IHomepageProps) {
         <Box>
             <Box sx={{ width: "100%", height: "100%" }}>
                 <div style={{ height: "calc(100vh - 2rem - 54px)", width: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Box component="img" sx={{ height: "100%", width: "100%", align: "center", aspectRatio: 1, objectFit: "cover" }} draggable={false} src="../../../images/bedrock_master.jpg"></Box>
+                    <Box component="img" sx={{ height: "100%", width: "100%", align: "center", aspectRatio: 1, objectFit: "cover" }} draggable={false} src="./bedrock_master.jpg"></Box>
                 </div>
             </Box>
             <Box sx={{ position: "fixed", top: "7rem", left: 0, width: "100%", zIndex: 2 }}>
                 <Box sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }}>
-                    <Box component="img" sx={{ height: "130px", width: "397.333px", align: "" }} draggable={false} src="../../../images/edition_logo.png"></Box>
+                    <Box component="img" sx={{ height: "130px", width: "397.333px", align: "" }} draggable={false} src="./edition_logo.png"></Box>
                 </Box>
             </Box>
             <Box sx={{ position: "fixed", bottom: "4rem", left: "1rem", width: "40%", zIndex: 2 }}>
