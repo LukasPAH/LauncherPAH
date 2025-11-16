@@ -1,8 +1,8 @@
 {
-  "name": "launcherpah",
-  "productName": "launcherpah",
-  "version": "1.0.0",
-  "description": "My Electron application description",
+  "name": "LauncherPAH",
+  "productName": "LauncherPAH",
+  "version": "0.0.1",
+  "description": "Minecraft Bedrock GDK Launcher",
   "main": ".vite/build/main.js",
   "scripts": {
     "start": "electron-forge start",
@@ -14,7 +14,7 @@
   },
   "keywords": [],
   "author": {
-    "name": "Lukas",
+    "name": "LukasPAH",
     "email": "32801643+LukasPAH@users.noreply.github.com"
   },
   "license": "MIT",
