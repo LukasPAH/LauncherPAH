@@ -1,5 +1,13 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app } from "electron";
+// Ensure there is only ever one instance of the application loaded.
+// If the user tries to launch another instance of the app, close
+// the second instance immediately and re-focus the first instance.
+if (!app.requestSingleInstanceLock()) {
+    app.exit();
+}
+
 import path from "node:path";
+import { BrowserWindow, ipcMain } from "electron";
 import started from "electron-squirrel-startup";
 import { readInstalledVersions } from "./managers/version/readVersions";
 import { downloadVersion } from "./events/responses/downloadVersion";
@@ -54,23 +62,16 @@ const createWindow = async () => {
     return mainWindow;
 };
 
-// Ensure there is only ever one instance of the application loaded.
-// If the user tries to launch another instance of the app, close
-// the second instance immediately and re-focus the first instance.
-if (!app.requestSingleInstanceLock()) {
-    app.quit();
-} else {
-    app.on("second-instance", () => {
-        if (window === null) return;
-        if (window.isMinimized()) window.restore();
-        window.focus();
-    });
-}
+app.on("second-instance", () => {
+    if (window === null) return;
+    if (window.isMinimized()) window.restore();
+    window.focus();
+});
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", async () => {
+app.whenReady().then(async () => {
     if (window === null) window = await createWindow();
     ipcMain.on("UILoaded", async () => {
         await readInstalledVersions();
