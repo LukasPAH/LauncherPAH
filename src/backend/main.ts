@@ -21,6 +21,7 @@ import { openFolder, openProfile } from "./events/responses/openFolder";
 import { addProfileEventResponse, removeProfileEventResponse } from "./events/responses/profile";
 import { tryMigrageGDKUserData } from "./managers/profile/profileFolder";
 import { getProfileFromName } from "./managers/profile/readProfiles";
+import { handleAssociations } from "./events/responses/handleAssociations";
 
 let window: BrowserWindow | null = null;
 
@@ -62,10 +63,14 @@ const createWindow = async () => {
     return mainWindow;
 };
 
-app.on("second-instance", () => {
+app.on("second-instance", async (_, args) => {
     if (window === null) return;
     if (window.isMinimized()) window.restore();
     window.focus();
+
+    // If the user launches any file association while the
+    // application is running, handle that here.
+    await handleAssociations(args);
 });
 
 // This method will be called when Electron has finished
@@ -131,4 +136,9 @@ app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         createWindow();
     }
+});
+
+// Handle file associations if the application is not running.
+app.on("open-file", async (_, path) => {
+    await handleAssociations(path);
 });

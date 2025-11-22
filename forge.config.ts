@@ -3,6 +3,7 @@ import { MakerWix } from "@electron-forge/maker-wix";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
+import { fileAssociationString } from "./fileAssociations";
 
 const config: ForgeConfig = {
     packagerConfig: {
@@ -21,7 +22,7 @@ const config: ForgeConfig = {
             icon: __dirname + "\\images\\icon.ico",
             arch: "x64",
             defaultInstallMode: "perMachine",
-            associateExtensions: "mcpack,mcworld",
+            associateExtensions: fileAssociationString(),
             bundled: true,
             ui: {
                 chooseDirectory: true
