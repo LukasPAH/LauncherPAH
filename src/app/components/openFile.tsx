@@ -26,8 +26,8 @@ export default function ScrollDialog(props: IOpenFileProps) {
     }, [props.selectedProfile]);
 
     function updateSelectedProfile(profile: IProfile) {
+        window.electronAPI.send("setSelectedProfile", profile);
         setSelectedProfile(profile);
-        console.log(profile);
     }
 
     return (

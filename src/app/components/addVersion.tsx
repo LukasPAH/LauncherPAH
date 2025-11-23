@@ -143,7 +143,6 @@ export default function ScrollDialog(props: IAddVersionProps) {
                     </Button>
                     <Button
                         onClick={() => {
-                            console.log(canSubmit, selectedVersionIndex);
                             if (canSubmit && selectedVersionIndex !== -1) {
                                 props.callback(selectedVersionIndex, text, props.selectedProfile?.name);
                                 resetStates();
