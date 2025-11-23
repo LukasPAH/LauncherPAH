@@ -21,6 +21,10 @@ export default function ScrollDialog(props: IOpenFileProps) {
 
     const [selectedProfile, setSelectedProfile] = React.useState(props.selectedProfile as IProfile);
 
+    React.useEffect(() => {
+        setSelectedProfile(props.selectedProfile);
+    }, [props.selectedProfile]);
+
     function updateSelectedProfile(profile: IProfile) {
         setSelectedProfile(profile);
         console.log(profile);
@@ -56,9 +60,7 @@ export default function ScrollDialog(props: IOpenFileProps) {
                     Select Profile to Import Content
                 </DialogTitle>
                 <Box sx={{ height: "1rem" }}></Box>
-                <Typography  sx={{ textTransform: "none", fontSize: 16, color: "white", textAlign: "center" }}>
-                    {props.fileName}
-                </Typography>
+                <Typography sx={{ textTransform: "none", fontSize: 16, color: "white", textAlign: "center" }}>{props.fileName}</Typography>
                 <Box sx={{ height: "1rem" }}></Box>
                 <DropDown profiles={profiles} selectedProfle={selectedProfile} callback={updateSelectedProfile} width={350}></DropDown>
                 <Box sx={{ height: "1rem" }}></Box>

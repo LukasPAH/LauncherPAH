@@ -52,7 +52,14 @@ export default function MainWindow() {
     return (
         <ThemeProvider theme={theme}>
             <div className="main-style">
-                <OpenFile open={openedFile} profiles={installedProfiles} selectedProfile={selectedProfile} callback={openFileCallback} closeCallback={closeFileModal} fileName={openFileName}></OpenFile>
+                <OpenFile
+                    open={openedFile}
+                    profiles={installedProfiles}
+                    selectedProfile={selectedProfile}
+                    callback={openFileCallback}
+                    closeCallback={closeFileModal}
+                    fileName={openFileName}
+                ></OpenFile>
                 <Tabs selectedProfile={selectedProfile} createdProfiles={installedProfiles} />
                 <Box sx={{ padding: "1rem", position: "fixed", bottom: 0, left: 0, width: "100%" }}>
                     <Box sx={{ display: "flex", flexDirection: "row", justifyContent: "center", width: "calc(100% - 2rem)" }}>

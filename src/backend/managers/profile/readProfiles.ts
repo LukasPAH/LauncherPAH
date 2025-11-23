@@ -43,7 +43,6 @@ export async function editProfile(name: string, index: number, beforeName: strin
             name: name,
             version: versionName,
         };
-        console.log(profiles)
         readProfiles();
         return;
     }
@@ -61,9 +60,9 @@ export function loadProfilesOnLaunch(profilesSetting: IProfiles) {
 
 export function readProfiles() {
     const lastProfile = getLastLaunchedProfileName();
-    const keys = Object.keys(profiles);
-    const index = keys.findIndex((key) => {
-        return key === lastProfile;
+    const values = Object.values(profiles);
+    const index = values.findIndex((value) => {
+        return value.name === lastProfile;
     });
     const window = BrowserWindow.getAllWindows()[0];
     if (index === -1) {
