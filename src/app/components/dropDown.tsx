@@ -14,6 +14,7 @@ export interface IDropdownProps {
     enableNewButton?: boolean;
     callback: (profile: IProfile) => void;
     newButtonCallback?: () => void;
+    width?: number;
 }
 
 const StyledMenu = styled((props: MenuProps) => <Menu {...props} />)(() => ({
@@ -37,7 +38,7 @@ export default function Dropdown(props: IDropdownProps) {
 
     return (
         <Box>
-            <Box sx={{maxWidth:180}}>
+            <Box sx={{maxWidth:props.width ?? 180}}>
                 <Button
                     sx={{ backgroundColor: "rgb(55, 65, 81)", minWidth: 180, color: "white", display: "flex", flexDirection: "column" }}
                     id="demo-customized-button"

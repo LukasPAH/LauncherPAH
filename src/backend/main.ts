@@ -21,9 +21,10 @@ import { openFolder, openProfile } from "./events/responses/openFolder";
 import { addProfileEventResponse, removeProfileEventResponse } from "./events/responses/profile";
 import { tryMigrageGDKUserData } from "./managers/profile/profileFolder";
 import { getProfileFromName } from "./managers/profile/readProfiles";
-import { handleAssociations } from "./events/responses/handleAssociations";
+import { handleAssociations, getLaunchedFile, launchFile } from "./events/responses/handleAssociations";
 
 let window: BrowserWindow | null = null;
+let launchedFile: string | undefined = undefined;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -78,6 +79,9 @@ app.on("second-instance", async (_, args) => {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
     if (window === null) window = await createWindow();
+    if (process.argv.length > 1) {
+        launchedFile = getLaunchedFile(process.argv);
+    }
     ipcMain.on("UILoaded", async () => {
         await readInstalledVersions();
         await getAvailableVersions();
@@ -88,6 +92,7 @@ app.whenReady().then(async () => {
             profile = getProfileFromName("Default");
         }
         await setSelectedProfileOnStart(profile);
+        if (launchedFile !== undefined) handleAssociations(launchedFile);
     });
     ipcMain.on("launchVersion", () => {
         const lastLaunchedProfileName = getLastLaunchedProfileName();
@@ -119,6 +124,9 @@ app.whenReady().then(async () => {
     ipcMain.on("openProfileLocation", (_, profile: IProfile) => {
         openProfile(profile);
     });
+    ipcMain.on("launchFile", async (_, profile: IProfile) => {
+        await launchFile(profile);
+    })
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -136,9 +144,4 @@ app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         createWindow();
     }
-});
-
-// Handle file associations if the application is not running.
-app.on("open-file", async (_, path) => {
-    await handleAssociations(path);
 });
