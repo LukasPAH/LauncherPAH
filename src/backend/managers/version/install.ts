@@ -8,6 +8,7 @@ import { launchVersion } from "../../events/responses/launchVersion";
 import path from "path";
 
 export async function install(file: string, window: Electron.BrowserWindow, isBeta: boolean, sideloaded = false, profile?: IProfile) {
+    settings.setInstallationLock(true);
     const versionNameRegex = /[^\\]*.msixvc$/;
     const versionName = file.match(versionNameRegex)[0].replace(".msixvc", "");
     const removeAppxCommand = `$name = (Get-AppxPackage -Name "${isBeta ? settings.previewPackageName : settings.releasePackageName}").PackageFullName; Remove-AppxPackage -Package $name;`;
@@ -22,6 +23,7 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
 
     const result = await register(file, defaultLocation, settings.getDrive());
     if (result === 1) {
+        settings.setInstallationLock(false);
         throw new Error("Failed to install! Please try again later!");
     }
 
@@ -57,6 +59,7 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
     await addInstallation();
     if (profile !== undefined) await launchVersion(profile);
     window.webContents.send("progressStage", "idle");
+    settings.setInstallationLock(false);
 }
 
 async function register(file: string, previewLocation: string, drive: Drive) {

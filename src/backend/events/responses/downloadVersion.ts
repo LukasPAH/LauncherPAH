@@ -2,10 +2,12 @@ import { BrowserWindow } from "electron";
 import { download } from "electron-dl";
 import fs from "fs";
 import { isVersionInstalled, prettifyVersionNumbers } from "../../managers/version/readVersions";
+import { setInstallationLock } from "../../settings";
 import { install } from "../../managers/version/install";
 import { getBackendVersionDB } from "../../managers/version/availableVersions";
 
 export async function downloadVersion(DBIndex: number, profile: IProfile) {
+    setInstallationLock(true);
     const window = BrowserWindow.getAllWindows()[0];
     window.webContents.send("startDownload", true);
     let filePath: string | undefined = undefined;
@@ -17,6 +19,7 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
     const versionName = url.match(versionNameRegex)[0].replace(".msixvc", "");
 
     if (isVersionInstalled(versionName)) {
+        setInstallationLock(false);
         return;
     }
 
@@ -26,10 +29,15 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
         const startTime = Date.now();
         await fetch(urlToUse, {
             method: "HEAD",
-        }).finally(() => {
-            const requestTime = Date.now() - startTime;
-            fetchTimes.push({ time: requestTime, url: urlToUse });
-        });
+        })
+            .finally(() => {
+                const requestTime = Date.now() - startTime;
+                fetchTimes.push({ time: requestTime, url: urlToUse });
+            })
+            .catch(() => {
+                setInstallationLock(false);
+                return;
+            });
     }
 
     const sortedTimes = fetchTimes.sort((a, b) => {
@@ -39,7 +47,7 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
     const urlToUse = sortedTimes[0].url;
 
     const versionNumber = prettifyVersionNumbers(versionName);
-    const previewOrRelease = versionName.toLowerCase().includes("minecraftwindowsbeta") ? "Preview ": "Release "
+    const previewOrRelease = versionName.toLowerCase().includes("minecraftwindowsbeta") ? "Preview " : "Release ";
 
     if (!fs.existsSync(process.cwd() + "\\tmp_download\\" + versionName + ".msixvc")) {
         await download(window, urlToUse, {

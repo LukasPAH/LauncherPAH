@@ -15,7 +15,7 @@ import { getAvailableVersions } from "./managers/version/availableVersions";
 import { pickFile } from "./events/responses/pickFile";
 import { launchVersion } from "./events/responses/launchVersion";
 import { setSelectedProfile, setSelectedProfileOnStart } from "./events/responses/setSelectedVersion";
-import { getLastLaunchedProfileName, updateDefaultProfileVersionsOnLaunch } from "./settings";
+import { getLastLaunchedProfileName, updateDefaultProfileVersionsOnLaunch, getInstallationLock } from "./settings";
 import { removeVersion } from "./events/responses/removeVersion";
 import { openFolder, openProfile } from "./events/responses/openFolder";
 import { addProfileEventResponse, removeProfileEventResponse } from "./events/responses/profile";
@@ -101,11 +101,17 @@ app.whenReady().then(async () => {
         launchVersion(lastLaunchedProfile);
     });
     ipcMain.on("download", (_, index: number) => {
+        const lock = getInstallationLock();
+        if (lock === true) return;
         const lastLaunchedProfileName = getLastLaunchedProfileName();
         const lastLaunchedProfile = getProfileFromName(lastLaunchedProfileName);
         downloadVersion(index, lastLaunchedProfile);
     });
-    ipcMain.on("filePick", pickFile);
+    ipcMain.on("filePick", async () => {
+        const lock = getInstallationLock();
+        if (lock === true) return;
+        await pickFile();
+    });
     ipcMain.on("setSelectedProfile", (_, profile: IProfile) => {
         setSelectedProfile(profile);
     });
@@ -125,8 +131,10 @@ app.whenReady().then(async () => {
         openProfile(profile);
     });
     ipcMain.on("launchFile", async (_, profile: IProfile) => {
+        const lock = getInstallationLock();
+        if (lock === true) return;
         await launchFile(profile);
-    })
+    });
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common

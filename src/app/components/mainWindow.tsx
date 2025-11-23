@@ -26,6 +26,7 @@ export default function MainWindow() {
     const [installedProfiles, setInstalledProfiles] = React.useState({} as IProfiles);
     const [openedFile, setOpenedFile] = React.useState(false);
     const [openFileName, setOpenFileName] = React.useState("");
+    const [installationLock, setInstallationLock] = React.useState(false);
 
     window.electronAPI.on("selectedProfile", (profile: IProfile) => {
         setSelectedProfile(profile);
@@ -38,6 +39,10 @@ export default function MainWindow() {
     window.electronAPI.on("launchedFile", (file: string) => {
         setOpenedFile(true);
         setOpenFileName(file);
+    });
+
+    window.electronAPI.on("installationLock", (value: boolean) => {
+        setInstallationLock(value);
     });
 
     function openFileCallback(profile: IProfile) {
@@ -59,6 +64,7 @@ export default function MainWindow() {
                     callback={openFileCallback}
                     closeCallback={closeFileModal}
                     fileName={openFileName}
+                    installationLock={installationLock}
                 ></OpenFile>
                 <Tabs selectedProfile={selectedProfile} createdProfiles={installedProfiles} />
                 <Box sx={{ padding: "1rem", position: "fixed", bottom: 0, left: 0, width: "100%" }}>

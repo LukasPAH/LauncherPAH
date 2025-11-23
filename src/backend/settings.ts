@@ -2,6 +2,7 @@ import fs from "fs";
 import { getLatestRelease, getLatestPreview } from "./managers/version/availableVersions";
 import { loadProfilesOnLaunch } from "./managers/profile/readProfiles";
 import path from "path";
+import { BrowserWindow } from "electron";
 
 const data = loadLocalData();
 export const launcherLocation = process.env.APPDATA + "\\LauncherPAH";
@@ -14,6 +15,7 @@ export const releasePackageName = "Microsoft.MinecraftUWP";
 export const previewPackageName = "Microsoft.MinecraftWindowsBeta";
 export const GDKReleaseUsersFolder = path.join(process.env.APPDATA, "Minecraft Bedrock", "Users");
 export const GDKPreviewUsersFolder = path.join(process.env.APPDATA, "Minecraft Bedrock Preview", "Users");
+let installationLock = false;
 
 const defaultData: ILocalData = {
     file_version: 0,
@@ -173,4 +175,14 @@ export function removeProfileSetting(profile: string) {
 
 export function getAllProfiles() {
     return data.settings.profiles;
+}
+
+export function getInstallationLock() {
+    return installationLock;
+}
+
+export function setInstallationLock(lock: boolean) {
+    installationLock = lock;
+    const window = BrowserWindow.getAllWindows()[0];
+    window.webContents.send("installationLock", lock);
 }
