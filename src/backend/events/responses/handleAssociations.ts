@@ -1,10 +1,9 @@
-import * as child_process from "child_process";
 import * as path from "path";
-import * as fs from "fs";
 import { fileAssociations } from "../../../../fileAssociations";
 import { BrowserWindow } from "electron";
 import { getVersionFolderFromName } from "../../managers/profile/readProfiles";
 import { installationsLocation } from "../../settings";
+import { launchVersion } from "./launchVersion";
 
 let fileToLaunch = "";
 
@@ -44,26 +43,22 @@ export async function launchFile(profile: IProfile) {
     let protocol = "minecraft";
     if (profile.version.includes("Preview")) protocol = "minecraft-preview";
     if (fileToLaunch.endsWith(".mcproject") || fileToLaunch.endsWith(".mceditoraddon")) {
-        importProject(executableLocation, fileToLaunch, protocol as "minecraft" | "minecraft-preview");
+        importProject(profile, executableLocation, fileToLaunch, protocol as "minecraft" | "minecraft-preview");
     } else {
-        importContent(executableLocation, fileToLaunch);
+        importContent(profile, executableLocation, fileToLaunch);
     }
 }
 
-export function importProject(exeFilePath: string, importFilePath: string, previewOrReleaseProtocol: "minecraft" | "minecraft-preview") {
+export function importProject(profile: IProfile, exeFilePath: string, importFilePath: string, previewOrReleaseProtocol: "minecraft" | "minecraft-preview") {
     const directory = path.dirname(exeFilePath);
     const executable = path.basename(exeFilePath);
     const launchCommand = `cd "${directory}"; ./${executable} ${previewOrReleaseProtocol}://creator/?Editor=true"&"import="${importFilePath}";`;
-    if (fs.existsSync(exeFilePath)) {
-        child_process.spawn(launchCommand, { stdio: "ignore", shell: "powershell" });
-    }
+    launchVersion(profile, launchCommand)
 }
 
-export function importContent(exeFilePath: string, importFilePath: string) {
+export function importContent(profile: IProfile, exeFilePath: string, importFilePath: string) {
     const directory = path.dirname(exeFilePath);
     const executable = path.basename(exeFilePath);
     const launchCommand = `cd "${directory}"; ./${executable} "${importFilePath}";`;
-    if (fs.existsSync(exeFilePath)) {
-        child_process.spawn(launchCommand, { stdio: "ignore", shell: "powershell" });
-    }
+    launchVersion(profile, launchCommand)
 }

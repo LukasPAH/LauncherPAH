@@ -7,7 +7,7 @@ export async function isPreviewRunning(): Promise<boolean> {
     const stdout = response.stdout.replace(/\s+/g, "");
     if (response.stdout) {
         try {
-            if (fs.existsSync(stdout) && stdout.toLowerCase().includes("beta")) return true;
+            if (fs.existsSync(stdout) && stdout.toLowerCase().includes("beta") && stdout.toLowerCase().includes("minecraft")) return true;
         } catch {
             return false;
         }
@@ -21,7 +21,7 @@ export async function isReleaseRunning(): Promise<boolean> {
     const stdout = response.stdout.replace(/\s+/g, "");
     if (response.stdout) {
         try {
-            if (fs.existsSync(stdout) && !stdout.toLowerCase().includes("beta")) return true;
+            if (fs.existsSync(stdout) && !stdout.toLowerCase().includes("beta") && stdout.toLowerCase().includes("minecraft")) return true;
         } catch {
             return false;
         }
