@@ -49,9 +49,9 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
     const versionNumber = prettifyVersionNumbers(versionName);
     const previewOrRelease = versionName.toLowerCase().includes("minecraftwindowsbeta") ? "Preview " : "Release ";
 
-    if (!fs.existsSync(process.cwd() + "\\tmp_download\\" + versionName + ".msixvc")) {
+    if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH\\tmp_download\\" + versionName + ".msixvc")) {
         await download(window, urlToUse, {
-            directory: process.cwd() + "\\tmp_download",
+            directory: process.env.APPDATA + "\\LauncherPAH\\tmp_download",
             onProgress(progress) {
                 window.webContents.send("downloadProgress", progress, previewOrRelease + versionNumber);
             },
@@ -62,7 +62,7 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
         });
         if (filePath === undefined) return;
     } else {
-        filePath = process.cwd() + "\\tmp_download\\" + versionName + ".msixvc";
+        filePath = process.env.APPDATA + "\\LauncherPAH\\tmp_download\\" + versionName + ".msixvc";
     }
 
     const isBeta = versionName.toLowerCase().includes("minecraftwindowsbeta");

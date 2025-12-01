@@ -50,7 +50,7 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
     await run(removeAppxCommand);
     window.webContents.send("progressStage", "Cleaning up...");
     if (!sideloaded) await fsAsync.rm(file);
-    const tempFolder = process.cwd() + "\\tmp_download";
+    const tempFolder = process.env.APPDATA + "\\LauncherPAH\\tmp_download";
     if (fs.existsSync(tempFolder))
         fs.rm(tempFolder, { force: true, recursive: true }, () => {
             0;
