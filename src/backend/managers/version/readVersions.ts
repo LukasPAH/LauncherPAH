@@ -28,12 +28,12 @@ export async function readInstalledVersions(): Promise<void> {
 
 export function prettifyVersionNumbers(version: string): string {
     const unmodifiedVersion = version;
-    version = version.toLowerCase().replace("microsoft.minecraftuwp_", "").replace("microsoft.minecraftwindowsbeta_", "").replace(".0_x64__8wekyb3d8bbwe", "");
+    version = version.toLowerCase().replace("microsoft.minecraftuwp_", "").replace("microsoft.minecraftwindowsbeta_", "").replace(".0_x64__8wekyb3d8bbwe", "").replace("_sideloaded", "");
     const majorVersion = version.slice(0, -2);
     const minorVersion = version.slice(-2);
     let versionString = majorVersion + "." + minorVersion;
     if (versionString.includes("..")) {
-        const rawVersion = unmodifiedVersion.toLowerCase().replace("microsoft.minecraftuwp_", "").replace("microsoft.minecraftwindowsbeta_", "").replace("_x64__8wekyb3d8bbwe", "");
+        const rawVersion = unmodifiedVersion.toLowerCase().replace("microsoft.minecraftuwp_", "").replace("microsoft.minecraftwindowsbeta_", "").replace("_x64__8wekyb3d8bbwe", "").replace("_sideloaded", "");
         const patchNumber = rawVersion.slice(-1);
         versionString = versionString.replace("1.", "");
         versionString = versionString.replace("..", `.${patchNumber}.`);
