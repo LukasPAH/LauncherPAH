@@ -53,7 +53,7 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
 
     let dataLocation = process.env.APPDATA;
     if (os.platform() === "linux") {
-        dataLocation = process.env.HOME;
+        dataLocation = path.join(process.env.HOME, "Games");
     }
 
     const tempDownloadPath = path.join(dataLocation, "LauncherPAH", "tmp_download");

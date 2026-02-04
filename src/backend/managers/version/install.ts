@@ -54,7 +54,7 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
 
     let dataLocation = process.env.APPDATA;
     if (os.platform() === "linux") {
-        dataLocation = process.env.HOME;
+        dataLocation = path.join(process.env.HOME, "Games");
     }
 
     const tempFolder = path.join(dataLocation + "LauncherPAH", "tmp_download");

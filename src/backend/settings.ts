@@ -97,13 +97,13 @@ function tryReadLocalData(): string | undefined {
         return contents;
     } catch {
         if (!fs.existsSync(path.join(dataLocation, "LauncherPAH"))) fs.mkdirSync(path.join(dataLocation, "LauncherPAH"), { recursive: true });
-        if (!fs.existsSync(path.join(dataLocation, "LauncherPAH", "data"))) fs.mkdirSync(path.join(dataLocation + "LauncherPAH", "data"), { recursive: true });
+        if (!fs.existsSync(path.join(dataLocation, "LauncherPAH", "data"))) fs.mkdirSync(path.join(dataLocation, "LauncherPAH", "data"), { recursive: true });
         return undefined;
     }
 }
 
 function writeLocalData(localData: ILocalData) {
-    fs.writeFileSync(dataLocation + "\\LauncherPAH\\data\\local_data.json", JSON.stringify(localData, null, 4));
+    fs.writeFileSync(path.join(dataLocation, "LauncherPAH", "data", "local_data.json"), JSON.stringify(localData, null, 4));
 }
 
 export function updateLastLaunchedProfileName(profileName: string) {
