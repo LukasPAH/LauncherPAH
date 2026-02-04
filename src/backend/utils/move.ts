@@ -1,5 +1,6 @@
 import * as fsAsync from "fs/promises";
 import { fixMinecraftTenFontMetadata } from "../utils/fixFonts";
+import path from "path";
 
 export function moveExecutable(fromLocation: string, toLocation: string): string {
     const packageName = fromLocation.includes("Preview") ? "Microsoft.MinecraftWindowsBeta_8wekyb3d8bbwe" : "Microsoft.MinecraftUWP_8wekyb3d8bbwe";
@@ -11,11 +12,11 @@ export async function moveFontMetadataFile(fromPath: string, toPath: string) {
     for (const remainingFile of remainingFiles) {
         if (remainingFile.name !== "font_metadata.json") continue;
 
-        const path = remainingFile.parentPath + "\\" + remainingFile.name;
+        const fontPath = path.join(remainingFile.parentPath, remainingFile.name);
         const localPath = remainingFile.parentPath.replace(fromPath, "");
-        const outputPath = toPath + localPath + "\\" + remainingFile.name;
-        await fixMinecraftTenFontMetadata(path);
-        await fsAsync.cp(path, outputPath, { recursive: true });
-        await fsAsync.rm(path);
+        const outputPath = path.join(toPath, localPath, remainingFile.name);
+        await fixMinecraftTenFontMetadata(fontPath);
+        await fsAsync.cp(fontPath, outputPath, { recursive: true });
+        await fsAsync.rm(fontPath);
     }
 }

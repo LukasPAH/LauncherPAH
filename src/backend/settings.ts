@@ -3,19 +3,12 @@ import { getLatestRelease, getLatestPreview } from "./managers/version/available
 import { loadProfilesOnLaunch } from "./managers/profile/readProfiles";
 import path from "path";
 import { BrowserWindow } from "electron";
+import os from "node:os";
 
-const data = loadLocalData();
-export const launcherLocation = process.env.APPDATA + "\\LauncherPAH";
-export const installationsLocation = launcherLocation + "\\installations";
-export const profilesLocation = launcherLocation + "\\profiles";
-let drive = data.settings.installDrive;
-let defaultPreviewLocation = drive + ":\\XboxGames\\Minecraft Preview for Windows\\Content";
-let defaultReleaseLocation = drive + ":\\XboxGames\\Minecraft for Windows\\Content";
-export const releasePackageName = "Microsoft.MinecraftUWP";
-export const previewPackageName = "Microsoft.MinecraftWindowsBeta";
-export const GDKReleaseUsersFolder = path.join(process.env.APPDATA, "Minecraft Bedrock", "Users");
-export const GDKPreviewUsersFolder = path.join(process.env.APPDATA, "Minecraft Bedrock Preview", "Users");
-let installationLock = false;
+let dataLocation = process.env.APPDATA;
+if (os.platform() === "linux") {
+    dataLocation = path.join(process.env.HOME, "Games");
+}
 
 const defaultData: ILocalData = {
     file_version: 0,
@@ -34,6 +27,19 @@ const defaultData: ILocalData = {
         },
     },
 };
+
+const data = loadLocalData();
+export const launcherLocation = path.join(dataLocation, "LauncherPAH");
+export const installationsLocation = path.join(launcherLocation, "installations");
+export const profilesLocation = path.join(launcherLocation, "profiles");
+let drive = data.settings.installDrive;
+let defaultPreviewLocation = drive + ":\\XboxGames\\Minecraft Preview for Windows\\Content";
+let defaultReleaseLocation = drive + ":\\XboxGames\\Minecraft for Windows\\Content";
+export const releasePackageName = "Microsoft.MinecraftUWP";
+export const previewPackageName = "Microsoft.MinecraftWindowsBeta";
+export const GDKReleaseUsersFolder = path.join(dataLocation, "Minecraft Bedrock", "Users");
+export const GDKPreviewUsersFolder = path.join(dataLocation, "Minecraft Bedrock Preview", "Users");
+let installationLock = false;
 
 function loadLocalData(): ILocalData {
     let localData: ILocalData | undefined = undefined;
@@ -82,20 +88,22 @@ function loadLocalData(): ILocalData {
 }
 
 function tryReadLocalData(): string | undefined {
-    if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH\\profiles")) fs.mkdirSync(process.env.APPDATA + "\\LauncherPAH\\profiles");
-    if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH\\installations")) fs.mkdirSync(process.env.APPDATA + "\\LauncherPAH\\installations");
+    if (!fs.existsSync(path.join(dataLocation, "LauncherPAH", "profiles")))
+        fs.mkdirSync(path.join(dataLocation, "LauncherPAH", "profiles"), { recursive: true });
+    if (!fs.existsSync(path.join(dataLocation, "LauncherPAH", "installations")))
+        fs.mkdirSync(path.join(dataLocation, "LauncherPAH", "installations"), { recursive: true });
     try {
-        const contents = fs.readFileSync(process.env.APPDATA + "\\LauncherPAH\\data\\local_data.json").toString();
+        const contents = fs.readFileSync(path.join(dataLocation, "LauncherPAH", "data", "local_data.json")).toString();
         return contents;
     } catch {
-        if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH")) fs.mkdirSync(process.env.APPDATA + "\\LauncherPAH");
-        if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH\\data")) fs.mkdirSync(process.env.APPDATA + "\\LauncherPAH\\data");
+        if (!fs.existsSync(path.join(dataLocation, "LauncherPAH"))) fs.mkdirSync(path.join(dataLocation, "LauncherPAH"), { recursive: true });
+        if (!fs.existsSync(path.join(dataLocation, "LauncherPAH", "data"))) fs.mkdirSync(path.join(dataLocation + "LauncherPAH", "data"), { recursive: true });
         return undefined;
     }
 }
 
 function writeLocalData(localData: ILocalData) {
-    fs.writeFileSync(process.env.APPDATA + "\\LauncherPAH\\data\\local_data.json", JSON.stringify(localData, null, 4));
+    fs.writeFileSync(dataLocation + "\\LauncherPAH\\data\\local_data.json", JSON.stringify(localData, null, 4));
 }
 
 export function updateLastLaunchedProfileName(profileName: string) {

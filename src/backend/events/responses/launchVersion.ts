@@ -1,6 +1,6 @@
 import * as settings from "../../settings";
 import fs from "fs";
-import fsAsync from "fs/promises"
+import fsAsync from "fs/promises";
 import * as child_process from "child_process";
 import { getVersionFolderFromName } from "../../managers/profile/readProfiles";
 import { getBackendVersionDB } from "../../managers/version/availableVersions";
@@ -34,7 +34,8 @@ export async function launchVersion(profile: IProfile, customLaunchCommand?: str
         }
         await fsAsync.symlink(profileFolder, releaseFolder, "junction");
     }
-    const versionLocation = settings.installationsLocation + "\\" + versionFolder + "\\Minecraft.Windows.exe";
+
+    const versionLocation = path.join(settings.installationsLocation, versionFolder, "Minecraft.Windows.exe");
     if (fs.existsSync(versionLocation)) child_process.spawn(customLaunchCommand ?? versionLocation, { stdio: "ignore", shell: "powershell" });
     settings.updateLastLaunchedProfileName(profile.name);
 }

@@ -1,10 +1,12 @@
 import { BrowserWindow } from "electron";
 import { download } from "electron-dl";
+import * as path from "path";
 import fs from "fs";
 import { isVersionInstalled, prettifyVersionNumbers } from "../../managers/version/readVersions";
 import { setInstallationLock } from "../../settings";
 import { install } from "../../managers/version/install";
 import { getBackendVersionDB } from "../../managers/version/availableVersions";
+import os from "node:os";
 
 export async function downloadVersion(DBIndex: number, profile: IProfile) {
     setInstallationLock(true);
@@ -49,9 +51,16 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
     const versionNumber = prettifyVersionNumbers(versionName);
     const previewOrRelease = versionName.toLowerCase().includes("minecraftwindowsbeta") ? "Preview " : "Release ";
 
-    if (!fs.existsSync(process.env.APPDATA + "\\LauncherPAH\\tmp_download\\" + versionName + ".msixvc")) {
+    let dataLocation = process.env.APPDATA;
+    if (os.platform() === "linux") {
+        dataLocation = process.env.HOME;
+    }
+
+    const tempDownloadPath = path.join(dataLocation, "LauncherPAH", "tmp_download");
+
+    if (!fs.existsSync(path.join(tempDownloadPath, versionName, ".msixvc"))) {
         await download(window, urlToUse, {
-            directory: process.env.APPDATA + "\\LauncherPAH\\tmp_download",
+            directory: tempDownloadPath,
             onProgress(progress) {
                 window.webContents.send("downloadProgress", progress, previewOrRelease + versionNumber);
             },
@@ -62,7 +71,7 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
         });
         if (filePath === undefined) return;
     } else {
-        filePath = process.env.APPDATA + "\\LauncherPAH\\tmp_download\\" + versionName + ".msixvc";
+        filePath = path.join(tempDownloadPath, versionName, ".msixvc");
     }
 
     const isBeta = versionName.toLowerCase().includes("minecraftwindowsbeta");

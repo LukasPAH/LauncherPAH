@@ -6,10 +6,11 @@ import { moveFontMetadataFile, moveExecutable } from "../../utils/move";
 import { addInstallation } from "./readVersions";
 import { launchVersion } from "../../events/responses/launchVersion";
 import path from "path";
+import os from "node:os";
 
 export async function install(file: string, window: Electron.BrowserWindow, isBeta: boolean, sideloaded = false, profile?: IProfile) {
     settings.setInstallationLock(true);
-    const versionNameRegex = /[^\\]*.msixvc$/;
+    const versionNameRegex = /[^\\|\/]*.msixvc$/;
     const versionName = file.match(versionNameRegex)[0].replace(".msixvc", "");
     const removeAppxCommand = `$name = (Get-AppxPackage -Name "${isBeta ? settings.previewPackageName : settings.releasePackageName}").PackageFullName; Remove-AppxPackage -Package $name;`;
 
@@ -29,7 +30,7 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
 
     window.webContents.send("progressStage", "Moving files to installation folder...");
 
-    const targetLocation = settings.installationsLocation + "\\" + versionName + (sideloaded ? "_sideloaded" : "");
+    const targetLocation = path.join(settings.installationsLocation, versionName + (sideloaded ? "_sideloaded" : ""));
     if (!fs.existsSync(targetLocation)) await fsAsync.mkdir(targetLocation);
 
     // Move the executable first.
@@ -50,7 +51,13 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
     await run(removeAppxCommand);
     window.webContents.send("progressStage", "Cleaning up...");
     if (!sideloaded) await fsAsync.rm(file);
-    const tempFolder = process.env.APPDATA + "\\LauncherPAH\\tmp_download";
+
+    let dataLocation = process.env.APPDATA;
+    if (os.platform() === "linux") {
+        dataLocation = process.env.HOME;
+    }
+
+    const tempFolder = path.join(dataLocation + "LauncherPAH", "tmp_download");
     if (fs.existsSync(tempFolder))
         fs.rm(tempFolder, { force: true, recursive: true }, () => {
             0;

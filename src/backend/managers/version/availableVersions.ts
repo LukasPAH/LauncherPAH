@@ -2,14 +2,13 @@ import { BrowserWindow } from "electron";
 import { installationsLocation } from "../../settings";
 import * as fsAsync from "node:fs/promises";
 import * as fs from "fs";
+import * as path from "path";
 import { prettifyVersionNumbers } from "./readVersions";
 
 const versionDB = "https://raw.githubusercontent.com/LukasPAH/minecraft-windows-gdk-version-db/refs/heads/main/historical_versions.json";
 
 let backendVersionDB: [string[], string][] = [];
 const cachedVersions: [string[], string][] = [];
-
-
 
 export async function getBackendVersionDB() {
     if (backendVersionDB.length === 0) await getAvailableVersions();
@@ -63,7 +62,7 @@ export async function getAvailableVersions() {
         const installations = await fsAsync.readdir(installationsLocation, { recursive: false });
 
         installations.forEach((installation) => {
-            if (fs.existsSync(installationsLocation + "\\" + installation + "\\Minecraft.Windows.exe")) {
+            if (fs.existsSync(path.join(installationsLocation, installation, "Minecraft.Windows.exe"))) {
                 const type = installation.toLowerCase().includes("minecraftwindowsbeta") ? "Preview " : "Release ";
                 const isSideLoaded = installation.toLowerCase().includes("_sideloaded");
                 if (!isSideLoaded) return;

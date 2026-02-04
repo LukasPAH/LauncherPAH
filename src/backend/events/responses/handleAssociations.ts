@@ -1,5 +1,5 @@
 import * as path from "path";
-import { fileAssociations } from "../../../../fileAssociations";
+import { fileAssociations } from "../../../../fileAssociations.cjs";
 import { BrowserWindow } from "electron";
 import { getVersionFolderFromName } from "../../managers/profile/readProfiles";
 import { installationsLocation } from "../../settings";
@@ -53,12 +53,12 @@ export function importProject(profile: IProfile, exeFilePath: string, importFile
     const directory = path.dirname(exeFilePath);
     const executable = path.basename(exeFilePath);
     const launchCommand = `cd "${directory}"; ./${executable} ${previewOrReleaseProtocol}://creator/?Editor=true"&"import="${importFilePath}";`;
-    launchVersion(profile, launchCommand)
+    launchVersion(profile, launchCommand);
 }
 
 export function importContent(profile: IProfile, exeFilePath: string, importFilePath: string) {
     const directory = path.dirname(exeFilePath);
     const executable = path.basename(exeFilePath);
     const launchCommand = `cd "${directory}"; ./${executable} "${importFilePath}";`;
-    launchVersion(profile, launchCommand)
+    launchVersion(profile, launchCommand);
 }

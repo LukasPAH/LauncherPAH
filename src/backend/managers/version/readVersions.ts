@@ -2,8 +2,9 @@ import { BrowserWindow } from "electron";
 import * as settings from "../../settings";
 import * as fsAsync from "fs/promises";
 import fs from "fs";
+import path from "path";
 
-const installLocation = settings.launcherLocation + "\\installations";
+const installLocation = path.join(settings.launcherLocation, "installations");
 
 let installedVersions: string[] = [];
 
@@ -15,7 +16,7 @@ export async function readInstalledVersions(): Promise<void> {
     const installedVersionsForUI: string[] = [];
 
     installations.forEach((installation) => {
-        if (fs.existsSync(installLocation + "\\" + installation + "\\Minecraft.Windows.exe")) {
+        if (fs.existsSync(path.join(installLocation, installation, "Minecraft.Windows.exe"))) {
             const type = installation.toLowerCase().includes("minecraftwindowsbeta") ? "Preview " : "Release ";
             const sideloadedText = installation.toLowerCase().includes("_sideloaded") ? " (sideloaded)" : "";
             installedVersionsForUI.push(type + prettifyVersionNumbers(installation) + sideloadedText);
@@ -28,12 +29,22 @@ export async function readInstalledVersions(): Promise<void> {
 
 export function prettifyVersionNumbers(version: string): string {
     const unmodifiedVersion = version;
-    version = version.toLowerCase().replace("microsoft.minecraftuwp_", "").replace("microsoft.minecraftwindowsbeta_", "").replace(".0_x64__8wekyb3d8bbwe", "").replace("_sideloaded", "");
+    version = version
+        .toLowerCase()
+        .replace("microsoft.minecraftuwp_", "")
+        .replace("microsoft.minecraftwindowsbeta_", "")
+        .replace(".0_x64__8wekyb3d8bbwe", "")
+        .replace("_sideloaded", "");
     const majorVersion = version.slice(0, -2);
     const minorVersion = version.slice(-2);
     let versionString = majorVersion + "." + minorVersion;
     if (versionString.includes("..")) {
-        const rawVersion = unmodifiedVersion.toLowerCase().replace("microsoft.minecraftuwp_", "").replace("microsoft.minecraftwindowsbeta_", "").replace("_x64__8wekyb3d8bbwe", "").replace("_sideloaded", "");
+        const rawVersion = unmodifiedVersion
+            .toLowerCase()
+            .replace("microsoft.minecraftuwp_", "")
+            .replace("microsoft.minecraftwindowsbeta_", "")
+            .replace("_x64__8wekyb3d8bbwe", "")
+            .replace("_sideloaded", "");
         const patchNumber = rawVersion.slice(-1);
         versionString = versionString.replace("1.", "");
         versionString = versionString.replace("..", `.${patchNumber}.`);
@@ -57,7 +68,7 @@ export function uglifyVersionNumbers(version: string) {
 }
 
 export function isVersionInstalled(name: string): boolean {
-    if (fs.existsSync(installLocation + "\\" + name + "\\Minecraft.Windows.exe")) return true;
+    if (fs.existsSync(path.join(installLocation, name, "Minecraft.Windows.exe"))) return true;
     return false;
 }
 
@@ -66,7 +77,7 @@ export function getInstalledVersions() {
 }
 
 export async function removeInstalledVersion(version: string) {
-    await fsAsync.rm(installLocation + "\\" + version, { recursive: true });
+    await fsAsync.rm(path.join(installLocation, version), { recursive: true });
 
     const index = installedVersions.findIndex((value) => {
         return value === version;
