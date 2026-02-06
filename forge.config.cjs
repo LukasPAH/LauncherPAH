@@ -37,13 +37,13 @@ const config = {
         categories: ["Game"],
       },
     }),
-    new MakerDeb({
-      options: {
-        name: "LauncherPAH",
-        icon: __dirname + "/images/icon.png",
-        categories: ["Game"],
-      },
-    }),
+    // new MakerDeb({
+    //   options: {
+    //     name: "LauncherPAH",
+    //     icon: __dirname + "/images/icon.png",
+    //     categories: ["Game"],
+    //   },
+    // }),
   ],
   plugins: [
     new VitePlugin({

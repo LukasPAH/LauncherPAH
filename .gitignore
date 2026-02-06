@@ -92,4 +92,7 @@ typings/
 out/
 
 # Temp folder.
-tmp_download
+tmp_download/
+
+# Dist.
+dist/
