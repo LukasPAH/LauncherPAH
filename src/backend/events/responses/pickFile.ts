@@ -26,9 +26,9 @@ export async function pickFile() {
 
     window.webContents.send("downloadCompleted", previewOrRelease + versionNumber);
     if (os.platform() === "win32") {
-        await install(chosenFile, window, isBeta, false);
+        await install(chosenFile, window, isBeta, true);
     }
     if (os.platform() === "linux") {
-        await installLinux(chosenFile, window, isBeta, false);
+        await installLinux(chosenFile, window, isBeta, true);
     }
 }

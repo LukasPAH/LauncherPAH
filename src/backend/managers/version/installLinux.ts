@@ -37,6 +37,7 @@ const installBatContents = `@echo off
 powershell -NoProfile -ExecutionPolicy Bypass -Command "& { Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH*'; Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0; Start-Service sshd; Set-Service -Name sshd -StartupType Automatic; if (-not (Get-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -ErrorAction SilentlyContinue)) { Write-Output 'Firewall Rule OpenSSH-Server-In-TCP does not exist, creating it...'; New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22 } else { Write-Output 'Firewall rule OpenSSH-Server-In-TCP already exists.' } }"`;
 
 export async function installLinux(file: string, window: Electron.BrowserWindow, isBeta: boolean, sideloaded = false, profile?: IProfile) {
+    settings.setInstallationLock(true);
     const hasAllDependencies = await hasDependencies(window);
     if (!hasAllDependencies) return;
 
@@ -46,6 +47,8 @@ export async function installLinux(file: string, window: Electron.BrowserWindow,
     const folderNames = ["shared", "storage", "oem"];
     const oemFolder = path.join(dockerFolder, "oem");
     const sharedFolder = path.join(dockerFolder, "shared");
+    const targetLocation = path.join(sharedFolder, fileName.replace(".msixvc", "") + (sideloaded ? "_sideloaded" : ""));
+    const finalLocation = path.join(settings.installationsLocation, fileName.replace(".msixvc", "") + (sideloaded ? "_sideloaded" : ""));
     const installBatLocation = path.join(oemFolder, "install.bat");
     await createDockerFolders(folderNames, dockerFolder);
 
@@ -53,7 +56,7 @@ export async function installLinux(file: string, window: Electron.BrowserWindow,
     await fsAsync.writeFile(installBatLocation, installBatContents);
 
     window.webContents.send("progressStage", "Starting Docker...");
-    const composeOutput = await run(`cd ${dockerFolder} && docker compose up -d`, true);
+    const composeOutput = await run(`cd ${dockerFolder} && docker compose down && docker compose up -d`, true);
     if (composeOutput.startsWith("Error:")) {
         window.webContents.send("showError", composeOutput);
         window.webContents.send("progressStage", "idle");
@@ -77,16 +80,18 @@ export async function installLinux(file: string, window: Electron.BrowserWindow,
     await setupWindows(dockerFolder, ip);
 
     window.webContents.send("progressStage", "Please set up windows (WIP)");
-    run("xfreerdp /v:localhost:3389 /u:Docker /p:admin /cert:ignore");
+    //run("xfreerdp /v:localhost:3389 /u:Docker /p:admin /cert:ignore");
 
     window.webContents.send("progressStage", "Moving MSIXVC to Windows...");
     // Using built in move since it is faster.
     await run(`mv ${file} ${sharedFolder}`);
 
     const windowsInstallLocation = isBeta ? settings.getDefaultPreviewLocation() : settings.getReleaseLocation();
-    const targetWindowsLocation = "C:\\Users\\Docker\\Desktop\\Shared";
+    const windowsSharedLocation = `C:\\Users\\Docker\\Desktop\\Shared`;
+    const targetWindowsLocation = `${windowsSharedLocation}\\${fileName.replace(".msixvc", "") + (sideloaded ? "_sideloaded" : "")}`;
 
     const installScript = `
+mkdir ${targetWindowsLocation}
 try {
     $name = (Get-AppxPackage -Name "${isBeta ? settings.previewPackageName : settings.releasePackageName}").PackageFullName; Remove-AppxPackage -Package $name;
 }
@@ -94,11 +99,10 @@ catch {
     Write-Host "Package not installed, skipping remove."
 }
 
-move "${targetWindowsLocation}\\${fileName}" C:\\Users\\Docker\\Desktop
+move "${windowsSharedLocation}\\${fileName}" C:\\Users\\Docker\\Desktop
 Add-AppxPackage 'C:\\Users\\Docker\\Desktop\\${fileName}' -Volume 'C:\\XboxGames'
 ${moveExecutable(windowsInstallLocation, targetWindowsLocation)}
-robocopy "${windowsInstallLocation}" "${targetWindowsLocation}" /XF *.exe /E /MOVE /MT:4 /R:3 /W:5 /NFL /NDL
-
+robocopy "${windowsInstallLocation}" "${targetWindowsLocation}" /XF *.exe /E /MOVE /MT:8 /W:5 /NFL /NDL
 try {
     $name = (Get-AppxPackage -Name "${isBeta ? settings.previewPackageName : settings.releasePackageName}").PackageFullName; Remove-AppxPackage -Package $name;
 }
@@ -106,7 +110,10 @@ catch {
     Write-Host "Package not installed, skipping remove."
 }
 Remove-Item -Path "C:\\Users\\Docker\\Desktop\\${fileName}" -Force
+New-Item ${windowsSharedLocation}\\install_complete.txt -type file
 `;
+
+    window.webContents.send("progressStage", "Installing game files...");
 
     await fsAsync.writeFile(path.join(sharedFolder, "install.ps1"), installScript);
     await run(
@@ -117,13 +124,27 @@ Remove-Item -Path "C:\\Users\\Docker\\Desktop\\${fileName}" -Force
     );
     user = user.replace("\n", "");
     run(
-        `cd ${dockerFolder} && docker exec MinecraftInstaller /bin/bash -c "sshpass -p 'admin' ssh -q -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null Docker@${ip} 'PsExec.exe -u ${user} -p admin -accepteula -i 1 -d powershell.exe -ExecutionPolicy Bypass -File ${targetWindowsLocation}\\install.ps1'"`,
+        `cd ${dockerFolder} && docker exec MinecraftInstaller /bin/bash -c "sshpass -p 'admin' ssh -q -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null Docker@${ip} 'PsExec.exe -u ${user} -p admin -accepteula -i 1 -d powershell.exe -ExecutionPolicy Bypass -File ${windowsSharedLocation}\\install.ps1'"`,
     );
 
-    window.webContents.send("progressStage", "Unpacking files...");
+    await watchForInstallationComplete(sharedFolder);
+
+    window.webContents.send("progressStage", "Moving files to installation directory...");
+    await run(`mv ${targetLocation} ${finalLocation}`);
+    run(`cd ${dockerFolder} && docker compose down`);
 
     window.webContents.send("progressStage", "idle");
     settings.setInstallationLock(false);
+}
+
+async function watchForInstallationComplete(folder: string) {
+    const watcher = fsAsync.watch(folder, { recursive: false });
+    for await (const event of watcher) {
+        if (event.eventType === "change" && event.filename === "install_complete.txt") {
+            await fsAsync.rm(path.join(folder, "install_complete.txt"));
+            return;
+        }
+    }
 }
 
 async function setupWindows(dockerFolder: string, ip: string) {
@@ -131,7 +152,6 @@ async function setupWindows(dockerFolder: string, ip: string) {
         `cd ${dockerFolder} && docker exec MinecraftInstaller sshpass -p 'admin' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=2 Docker@${ip} "powershell -NoProfile -Command Write-Output ready"`,
     );
     if (sshOutput.startsWith("Error:") && !sshOutput.includes("Warning:")) {
-        console.log(sshOutput);
         await setupWindows(dockerFolder, ip);
     }
 }
