@@ -1,11 +1,17 @@
 import { BrowserWindow, dialog } from "electron";
 import { install } from "../../managers/version/install";
+import { installLinux } from "../../managers/version/installLinux";
 import { prettifyVersionNumbers } from "../../managers/version/readVersions";
+import os from "node:os";
 
 export async function pickFile() {
     const window = BrowserWindow.getAllWindows()[0];
 
-    const chosenFiles = await dialog.showOpenDialog(null, { properties: ["openFile"], title: "Open Custom MSIXVC", filters: [{ extensions: ["msixvc"], name: "" }] });
+    const chosenFiles = await dialog.showOpenDialog(null, {
+        properties: ["openFile"],
+        title: "Open Custom MSIXVC",
+        filters: [{ extensions: ["msixvc"], name: "" }],
+    });
     const chosenFile = chosenFiles.filePaths[0];
     if (chosenFile === undefined || chosenFile === null) return;
     if (!chosenFile.endsWith(".msixvc")) return;
@@ -19,5 +25,10 @@ export async function pickFile() {
     const versionNumber = prettifyVersionNumbers(versionName);
 
     window.webContents.send("downloadCompleted", previewOrRelease + versionNumber);
-    await install(chosenFile, window, isBeta, true);
+    if (os.platform() === "win32") {
+        await install(chosenFile, window, isBeta, false);
+    }
+    if (os.platform() === "linux") {
+        await installLinux(chosenFile, window, isBeta, false);
+    }
 }

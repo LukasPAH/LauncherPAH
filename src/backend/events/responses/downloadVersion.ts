@@ -7,6 +7,7 @@ import { setInstallationLock } from "../../settings";
 import { install } from "../../managers/version/install";
 import { getBackendVersionDB } from "../../managers/version/availableVersions";
 import os from "node:os";
+import { installLinux } from "../../managers/version/installLinux";
 
 export async function downloadVersion(DBIndex: number, profile: IProfile) {
     setInstallationLock(true);
@@ -76,5 +77,10 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
 
     const isBeta = versionName.toLowerCase().includes("minecraftwindowsbeta");
 
-    await install(filePath, window, isBeta, false, profile);
+    if (os.platform() === "win32") {
+        await install(filePath, window, isBeta, false, profile);
+    }
+    if (os.platform() === "linux") {
+        await installLinux(filePath, window, isBeta, false, profile);
+    }
 }

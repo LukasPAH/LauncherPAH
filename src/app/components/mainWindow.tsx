@@ -5,6 +5,7 @@ import DownloadProgress from "./progress";
 import "../styles.css";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import OpenFile from "./openFile";
+import ErrorModal from "./errorModal";
 
 window.addEventListener("load", () => {
     window.electronAPI.send("UILoaded", undefined);
@@ -27,6 +28,7 @@ export default function MainWindow() {
     const [openedFile, setOpenedFile] = React.useState(false);
     const [openFileName, setOpenFileName] = React.useState("");
     const [installationLock, setInstallationLock] = React.useState(false);
+    const [error, setError] = React.useState([false, ""] as [boolean, string]);
 
     window.electronAPI.on("selectedProfile", (profile: IProfile) => {
         setSelectedProfile(profile);
@@ -43,6 +45,10 @@ export default function MainWindow() {
 
     window.electronAPI.on("installationLock", (value: boolean) => {
         setInstallationLock(value);
+    });
+
+    window.electronAPI.on("showError", (message) => {
+        setError([true, message]);
     });
 
     function openFileCallback(profile: IProfile) {
@@ -72,6 +78,7 @@ export default function MainWindow() {
                         <DownloadProgress />
                     </Box>
                 </Box>
+                <ErrorModal error={error}></ErrorModal>
             </div>
         </ThemeProvider>
     );

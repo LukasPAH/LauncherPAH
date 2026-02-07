@@ -3,7 +3,8 @@ type Drive = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "
 interface ISettings {
     installDrive: Drive;
     lastLaunchedProfile: string;
-    profiles: IProfiles
+    profiles: IProfiles;
+    dockerFolder?: string;
 }
 
 interface ILocalData {
@@ -12,10 +13,10 @@ interface ILocalData {
 }
 
 interface IProfiles {
-    [key: string]: IProfile
+    [key: string]: IProfile;
 }
 
 interface IProfile {
-    name: string,
-    version: string,
+    name: string;
+    version: string;
 }

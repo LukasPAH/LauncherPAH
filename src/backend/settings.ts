@@ -194,3 +194,28 @@ export function setInstallationLock(lock: boolean) {
     const window = BrowserWindow.getAllWindows()[0];
     window.webContents.send("installationLock", lock);
 }
+
+export function getDockerLocation(): string {
+    if (data.settings.dockerFolder === undefined) {
+        const defaultDockerLocation = path.join(launcherLocation, "docker");
+        if (!fs.existsSync(defaultDockerLocation)) {
+            fs.mkdirSync(defaultDockerLocation, { recursive: true });
+        }
+        data.settings.dockerFolder = defaultDockerLocation;
+        writeLocalData(data);
+        return defaultDockerLocation;
+    }
+
+    if (!fs.existsSync(data.settings.dockerFolder)) {
+        fs.mkdirSync(data.settings.dockerFolder, { recursive: true });
+    }
+    return data.settings.dockerFolder;
+}
+
+export function setDockerLocation(location: string) {
+    if (!fs.existsSync(location)) {
+        fs.mkdirSync(location, { recursive: true });
+    }
+    data.settings.dockerFolder = location;
+    writeLocalData(data);
+}
