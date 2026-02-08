@@ -31,8 +31,29 @@ export async function launchVersion(profile: IProfile, customLaunchCommand?: str
     if (!isGameRunning) {
         if (isJunct) {
             await fsAsync.unlink(releaseFolder);
+        } else if (fs.existsSync(releaseFolder)) {
+            const backupFolder = `${releaseFolder}_bak`;
+            try {
+                if (!fs.existsSync(backupFolder)) {
+                    await fsAsync.rename(releaseFolder, backupFolder);
+                } else {
+                    await fsAsync.rm(releaseFolder, { recursive: true, force: true });
+                }
+            } catch (error) {
+                const err = error as NodeJS.ErrnoException;
+                if (err.code !== "ENOENT") {
+                    throw err;
+                }
+            }
         }
-        await fsAsync.symlink(profileFolder, releaseFolder, "junction");
+        try {
+            await fsAsync.symlink(profileFolder, releaseFolder, "junction");
+        } catch (error) {
+            const err = error as NodeJS.ErrnoException;
+            if (err.code !== "EEXIST") {
+                throw err;
+            }
+        }
     }
 
     const versionLocation = path.join(settings.installationsLocation, versionFolder, "Minecraft.Windows.exe");
