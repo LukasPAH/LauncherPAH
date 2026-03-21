@@ -39,6 +39,7 @@ export function getLaunchedFile(args: string[]) {
 export async function launchFile(profile: IProfile) {
     if (fileToLaunch === "") return;
     const folder = await getVersionFolderFromName(profile.name);
+    if (folder === undefined) return;
     const executableLocation = path.join(installationsLocation, folder, "Minecraft.Windows.exe");
     let protocol = "minecraft";
     if (profile.version.includes("Preview")) protocol = "minecraft-preview";

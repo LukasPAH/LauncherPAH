@@ -1,4 +1,30 @@
-type Drive = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z";
+type Drive =
+    | "A"
+    | "B"
+    | "C"
+    | "D"
+    | "E"
+    | "F"
+    | "G"
+    | "H"
+    | "I"
+    | "J"
+    | "K"
+    | "L"
+    | "M"
+    | "N"
+    | "O"
+    | "P"
+    | "Q"
+    | "R"
+    | "S"
+    | "T"
+    | "U"
+    | "V"
+    | "W"
+    | "X"
+    | "Y"
+    | "Z";
 
 interface ISettings {
     installDrive: Drive;
@@ -19,4 +45,12 @@ interface IProfiles {
 interface IProfile {
     name: string;
     version: string;
+    protonOptions?: IProtonOptions;
+}
+
+interface IProtonOptions {
+    enableLogging?: boolean;
+    enableHDR?: boolean;
+    enableWayland?: boolean;
+    protonGDKVersion: string;
 }

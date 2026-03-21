@@ -10,8 +10,10 @@ import os from "node:os";
 
 export async function install(file: string, window: Electron.BrowserWindow, isBeta: boolean, sideloaded = false, profile?: IProfile) {
     settings.setInstallationLock(true);
-    const versionNameRegex = /[^\\|\/]*.msixvc$/;
-    const versionName = file.match(versionNameRegex)[0].replace(".msixvc", "");
+    const versionNameRegex = /[^\\|/]*.msixvc$/;
+    const regexMatch = file.match(versionNameRegex);
+    if (regexMatch === null) return;
+    const versionName = regexMatch[0].replace(".msixvc", "");
     const removeAppxCommand = `$name = (Get-AppxPackage -Name "${isBeta ? settings.previewPackageName : settings.releasePackageName}").PackageFullName; Remove-AppxPackage -Package $name;`;
 
     const defaultLocation = isBeta ? settings.getDefaultPreviewLocation() : settings.getReleaseLocation();
@@ -53,7 +55,7 @@ export async function install(file: string, window: Electron.BrowserWindow, isBe
     if (!sideloaded) await fsAsync.rm(file);
 
     let dataLocation = process.env.APPDATA;
-    if (os.platform() === "linux") {
+    if (os.platform() === "linux" && process.env.HOME) {
         dataLocation = path.join(process.env.HOME, "Games");
     }
 

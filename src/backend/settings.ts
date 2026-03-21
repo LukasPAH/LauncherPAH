@@ -5,8 +5,8 @@ import path from "path";
 import { BrowserWindow } from "electron";
 import os from "node:os";
 
-let dataLocation = process.env.APPDATA;
-if (os.platform() === "linux") {
+let dataLocation = process.env.APPDATA ?? "";
+if (os.platform() === "linux" && process.env.HOME) {
     dataLocation = path.join(process.env.HOME, "Games");
 }
 

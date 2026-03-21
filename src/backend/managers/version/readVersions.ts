@@ -4,6 +4,8 @@ import * as fsAsync from "fs/promises";
 import fs from "fs";
 import path from "path";
 
+const versionRegex = /(\d+)\.(\d+)\.(\d+)$/;
+const calVerStartNumber = 26;
 const installLocation = path.join(settings.launcherLocation, "installations");
 
 let installedVersions: string[] = [];
@@ -19,7 +21,9 @@ export async function readInstalledVersions(): Promise<void> {
         if (fs.existsSync(path.join(installLocation, installation, "Minecraft.Windows.exe"))) {
             const type = installation.toLowerCase().includes("minecraftwindowsbeta") ? "Preview " : "Release ";
             const sideloadedText = installation.toLowerCase().includes("_sideloaded") ? " (sideloaded)" : "";
-            installedVersionsForUI.push(type + prettifyVersionNumbers(installation) + sideloadedText);
+            const prettyVersion = prettifyVersionNumbers(installation);
+            if (prettyVersion === undefined) return;
+            installedVersionsForUI.push(type + prettyVersion + sideloadedText);
             installedVersions.push(installation);
         }
     });
@@ -27,44 +31,73 @@ export async function readInstalledVersions(): Promise<void> {
     window.webContents.send("installedVersions", installedVersionsForUI);
 }
 
-export function prettifyVersionNumbers(version: string): string {
-    const unmodifiedVersion = version;
+export function prettifyVersionNumbers(version: string): string | undefined {
     version = version
         .toLowerCase()
         .replace("microsoft.minecraftuwp_", "")
         .replace("microsoft.minecraftwindowsbeta_", "")
         .replace(".0_x64__8wekyb3d8bbwe", "")
         .replace("_sideloaded", "");
-    const majorVersion = version.slice(0, -2);
-    const minorVersion = version.slice(-2);
-    let versionString = majorVersion + "." + minorVersion;
-    if (versionString.includes("..")) {
-        const rawVersion = unmodifiedVersion
-            .toLowerCase()
-            .replace("microsoft.minecraftuwp_", "")
-            .replace("microsoft.minecraftwindowsbeta_", "")
-            .replace("_x64__8wekyb3d8bbwe", "")
-            .replace("_sideloaded", "");
-        const patchNumber = rawVersion.slice(-1);
-        versionString = versionString.replace("1.", "");
-        versionString = versionString.replace("..", `.${patchNumber}.`);
+    const versionMatch = version.match(versionRegex);
+
+    if (versionMatch === null) {
+        return;
     }
+
+    const majorVersion = versionMatch[1];
+    if (majorVersion === undefined) {
+        return;
+    }
+
+    const minorVersion = versionMatch[2];
+    if (minorVersion === undefined) {
+        return;
+    }
+
+    const patchVersionUnprocessed = versionMatch[3];
+    if (patchVersionUnprocessed === undefined) {
+        return;
+    }
+
+    const patchVersion = (parseInt(patchVersionUnprocessed) / 100).toFixed(2);
+
+    let versionString = `${majorVersion}.${minorVersion}.${patchVersion}`;
+    if (parseInt(minorVersion) >= calVerStartNumber) {
+        versionString = `${minorVersion}.${patchVersion}`;
+    }
+
     return versionString;
 }
 
-export function uglifyVersionNumbers(version: string) {
+export function uglifyVersionNumbers(version: string): string | undefined {
     version = version.replace("Release ", "").replace("Preview ", "").replace(" (Sideloaded)", "");
-    const regex = /\.(.)+\./;
-    const regexMatch = version.match(regex);
-    if (version.slice(0, 2) !== "1." && regexMatch !== null) {
-        const patchNumber = regexMatch[1];
-        const majorVersion = version.replace(/\.(.)+\./, ".");
-        return "1." + majorVersion + `.${patchNumber}`;
-    } else {
-        const majorVersion = version.slice(0, -3);
-        const minorVersion = version.slice(-2);
-        return majorVersion + minorVersion;
+    const versionMatch = version.match(versionRegex);
+
+    if (versionMatch === null) {
+        return;
     }
+    if (versionMatch === null) {
+        return;
+    }
+
+    const majorVersion = versionMatch[1];
+    if (majorVersion === undefined) {
+        return;
+    }
+
+    const minorVersion = versionMatch[2];
+    if (minorVersion === undefined) {
+        return;
+    }
+
+    const patchVersion = versionMatch[3];
+    if (patchVersion === undefined) {
+        return;
+    }
+
+    const unprocessedPatchVersion = `${minorVersion}.${patchVersion}`;
+    const parsedPatchVersion = Math.round(parseFloat(unprocessedPatchVersion) * 100);
+    return `1.${majorVersion}.${parsedPatchVersion}.0`;
 }
 
 export function isVersionInstalled(name: string): boolean {

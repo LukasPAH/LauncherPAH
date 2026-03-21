@@ -3,6 +3,11 @@ import util from "util";
 
 export const execAsync = util.promisify(child_process.exec);
 
+export async function spawnDetached(command: string) {
+    const child = child_process.spawn(command, { shell: "bash", detached: true, stdio: "ignore" });
+    child.unref();
+}
+
 export async function run(command: string, supressStdErr?: boolean): Promise<string> {
     try {
         const { stderr, stdout } = await execAsync(command, { shell: "bash" });

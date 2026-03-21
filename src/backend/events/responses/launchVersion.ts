@@ -8,6 +8,8 @@ import { downloadVersion } from "./downloadVersion";
 import path from "path";
 import { isJunction } from "../../utils/isJunction";
 import { isPreviewRunning, isReleaseRunning } from "../../utils/isGameRunning";
+import { launchLinuxVersion } from "./launchLinuxVersion";
+import os from "node:os";
 
 export async function launchInstalledVersion(profile: IProfile) {
     await launchVersion(profile);
@@ -24,6 +26,14 @@ export async function launchVersion(profile: IProfile, customLaunchCommand?: str
         }
         if (!profile.version.toLowerCase().includes("sideloaded")) await downloadVersion(index, profile);
     }
+
+    if (os.platform() === "linux") {
+        launchLinuxVersion(profile, customLaunchCommand);
+        return;
+    }
+
+    if (versionFolder === undefined) return;
+
     const profileFolder = path.join(settings.profilesLocation, profile.name);
     const releaseFolder = profile.version.toLowerCase().includes("preview") ? settings.GDKPreviewUsersFolder : settings.GDKReleaseUsersFolder;
     const isJunct = await isJunction(releaseFolder);

@@ -66,7 +66,9 @@ export async function getAvailableVersions() {
                 const type = installation.toLowerCase().includes("minecraftwindowsbeta") ? "Preview " : "Release ";
                 const isSideLoaded = installation.toLowerCase().includes("_sideloaded");
                 if (!isSideLoaded) return;
-                const prettyName = type + prettifyVersionNumbers(installation) + (isSideLoaded ? " (Sideloaded)" : "");
+                const prettyVersion = prettifyVersionNumbers(installation);
+                if (prettyVersion === undefined) return;
+                const prettyName = type + prettyVersion + (isSideLoaded ? " (Sideloaded)" : "");
                 versionNamesForUI.push(prettyName);
                 backendVersionDB.push([[], prettyName]);
             }

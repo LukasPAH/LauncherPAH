@@ -19,7 +19,9 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
     const url = versionDB[DBIndex][0][0];
 
     const versionNameRegex = /[^/]*.msixvc$/;
-    const versionName = url.match(versionNameRegex)[0].replace(".msixvc", "");
+    const regexMatch = url.match(versionNameRegex);
+    if (regexMatch === null) return;
+    const versionName = regexMatch[0].replace(".msixvc", "");
 
     if (isVersionInstalled(versionName)) {
         setInstallationLock(false);
@@ -50,11 +52,18 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
     const urlToUse = sortedTimes[0].url;
 
     const versionNumber = prettifyVersionNumbers(versionName);
+    if (versionNumber === undefined) {
+        return;
+    }
     const previewOrRelease = versionName.toLowerCase().includes("minecraftwindowsbeta") ? "Preview " : "Release ";
 
     let dataLocation = process.env.APPDATA;
-    if (os.platform() === "linux") {
+    if (os.platform() === "linux" && process.env.HOME) {
         dataLocation = path.join(process.env.HOME, "Games");
+    }
+
+    if (dataLocation === undefined) {
+        return;
     }
 
     const tempDownloadPath = path.join(dataLocation, "LauncherPAH", "tmp_download");

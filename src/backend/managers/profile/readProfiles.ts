@@ -1,4 +1,12 @@
-import { setProfileVersion, removeProfileSetting, getAllProfiles, installationsLocation, getLastLaunchedProfileName, updateLastLaunchedProfileName, profilesLocation } from "../../settings";
+import {
+    setProfileVersion,
+    removeProfileSetting,
+    getAllProfiles,
+    installationsLocation,
+    getLastLaunchedProfileName,
+    updateLastLaunchedProfileName,
+    profilesLocation,
+} from "../../settings";
 import { getBackendVersionDB } from "../version/availableVersions";
 import { BrowserWindow } from "electron";
 import { uglifyVersionNumbers } from "../version/readVersions";
@@ -92,6 +100,7 @@ export async function getVersionFolderFromName(name: string): Promise<string | u
     }
     if (versionName === undefined) return;
     const uglyName = uglifyVersionNumbers(versionName);
+    if (uglyName === undefined) return;
     const installations = await fsAsync.readdir(installationsLocation, { recursive: false });
 
     const sideloadedInstallations = installations.filter((value) => {

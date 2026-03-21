@@ -22,6 +22,7 @@ import { addProfileEventResponse, removeProfileEventResponse } from "./events/re
 import { tryMigrageGDKUserData } from "./managers/profile/profileFolder";
 import { getProfileFromName } from "./managers/profile/readProfiles";
 import { handleAssociations, getLaunchedFile, launchFile } from "./events/responses/handleAssociations";
+import { getProtonVersions } from "./managers/proton/getAvailableVersions";
 
 let window: BrowserWindow | null = null;
 let launchedFile: string | undefined = undefined;
@@ -83,13 +84,14 @@ app.whenReady().then(async () => {
         launchedFile = getLaunchedFile(process.argv);
     }
     ipcMain.on("UILoaded", async () => {
+        await getProtonVersions();
         await readInstalledVersions();
         await getAvailableVersions();
         await updateDefaultProfileVersionsOnLaunch();
         const lastLaunchedProfileName = getLastLaunchedProfileName();
         let profile = getProfileFromName(lastLaunchedProfileName);
         if (profile === undefined) {
-            profile = getProfileFromName("Default");
+            profile = getProfileFromName("Default") as IProfile;
         }
         await setSelectedProfileOnStart(profile);
         if (launchedFile !== undefined) handleAssociations(launchedFile);
@@ -97,7 +99,7 @@ app.whenReady().then(async () => {
     ipcMain.on("launchVersion", () => {
         const lastLaunchedProfileName = getLastLaunchedProfileName();
         const lastLaunchedProfile = getProfileFromName(lastLaunchedProfileName);
-
+        if (lastLaunchedProfile === undefined) return;
         launchVersion(lastLaunchedProfile);
     });
     ipcMain.on("download", (_, index: number) => {
@@ -105,6 +107,7 @@ app.whenReady().then(async () => {
         if (lock === true) return;
         const lastLaunchedProfileName = getLastLaunchedProfileName();
         const lastLaunchedProfile = getProfileFromName(lastLaunchedProfileName);
+        if (lastLaunchedProfile === undefined) return;
         downloadVersion(index, lastLaunchedProfile);
     });
     ipcMain.on("filePick", async () => {

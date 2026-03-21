@@ -7,7 +7,7 @@ import os from "node:os";
 export async function pickFile() {
     const window = BrowserWindow.getAllWindows()[0];
 
-    const chosenFiles = await dialog.showOpenDialog(null, {
+    const chosenFiles = await dialog.showOpenDialog(window, {
         properties: ["openFile"],
         title: "Open Custom MSIXVC",
         filters: [{ extensions: ["msixvc"], name: "" }],
@@ -20,9 +20,16 @@ export async function pickFile() {
     const previewOrRelease = isBeta ? "Preview " : "Release ";
 
     const versionNameRegex = /[^/]*.msixvc$/;
-    const versionName = chosenFile.match(versionNameRegex)[0].replace(".msixvc", "");
+    const regexMatch = chosenFile.match(versionNameRegex);
+    if (regexMatch === null) {
+        return;
+    }
+    const versionName = regexMatch[0].replace(".msixvc", "");
 
     const versionNumber = prettifyVersionNumbers(versionName);
+    if (versionNumber === undefined) {
+        return;
+    }
 
     window.webContents.send("downloadCompleted", previewOrRelease + versionNumber);
     if (os.platform() === "win32") {
