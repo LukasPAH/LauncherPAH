@@ -8,14 +8,10 @@ import * as tar from "tar";
 import { download } from "electron-dl";
 import { UMU_LINK } from "../../consts";
 import { BrowserWindow } from "electron";
+import { installProton } from "../../managers/proton/install";
 
 export async function launchLinuxVersion(profile: IProfile, customLaunchCommand?: string) {
-    const protonOptions = profile.protonOptions;
-    // if (protonOptions === undefined) {
-    //     // TODO: add error logging here.
-    //     return;
-    // }
-
+    const protonOptions = await installProton(profile);
     await installUmu();
     const umuBinary = path.join(settings.launcherLocation, "umu", "umu-run");
 

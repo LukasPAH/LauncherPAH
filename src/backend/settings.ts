@@ -32,6 +32,7 @@ const data = loadLocalData();
 export const launcherLocation = path.join(dataLocation, "LauncherPAH");
 export const installationsLocation = path.join(launcherLocation, "installations");
 export const profilesLocation = path.join(launcherLocation, "profiles");
+export const protonLocation = path.join(launcherLocation, "proton");
 let drive = data.settings.installDrive;
 let defaultPreviewLocation = drive + ":\\XboxGames\\Minecraft Preview for Windows\\Content";
 let defaultReleaseLocation = drive + ":\\XboxGames\\Minecraft for Windows\\Content";
@@ -217,5 +218,11 @@ export function setDockerLocation(location: string) {
         fs.mkdirSync(location, { recursive: true });
     }
     data.settings.dockerFolder = location;
+    writeLocalData(data);
+}
+
+export function setProtonOptions(profile: IProfile, protonOptions: IProtonOptions) {
+    console.log(profile.name);
+    data.settings.profiles[profile.name.replaceAll(" ", "_")].protonOptions = protonOptions;
     writeLocalData(data);
 }

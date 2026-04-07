@@ -90,6 +90,8 @@ export async function installLinux(file: string, window: Electron.BrowserWindow,
     const windowsSharedLocation = `C:\\Users\\Docker\\Desktop\\Shared`;
     const targetWindowsLocation = `${windowsSharedLocation}\\${fileName.replace(".msixvc", "") + (sideloaded ? "_sideloaded" : "")}`;
 
+    const ingoredDlls = sideloaded ? "Microsoft.WindowsAppRuntime.Bootstrap.dll" : "";
+
     const installScript = `
 mkdir ${targetWindowsLocation}
 try {
@@ -102,7 +104,7 @@ catch {
 move "${windowsSharedLocation}\\${fileName}" C:\\Users\\Docker\\Desktop
 Add-AppxPackage 'C:\\Users\\Docker\\Desktop\\${fileName}' -Volume 'C:\\XboxGames'
 ${moveExecutable(windowsInstallLocation, targetWindowsLocation)}
-robocopy "${windowsInstallLocation}" "${targetWindowsLocation}" /XF *.exe /E /MOVE /MT:8 /W:5 /NFL /NDL
+robocopy "${windowsInstallLocation}" "${targetWindowsLocation}" /XF *.exe ${ingoredDlls} /E /MOVE /MT:8 /W:5 /NFL /NDL
 try {
     $name = (Get-AppxPackage -Name "${isBeta ? settings.previewPackageName : settings.releasePackageName}").PackageFullName; Remove-AppxPackage -Package $name;
 }

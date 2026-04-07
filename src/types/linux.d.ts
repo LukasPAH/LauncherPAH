@@ -1,8 +1,8 @@
 interface IProtonOptions {
-    wayland?: boolean;
-    hdr?: boolean;
-    logging?: boolean;
-    protonPath: string;
+    enableLogging?: boolean;
+    enableHDR?: boolean;
+    enableWayland?: boolean;
+    protonGDKVersion: string;
 }
 
 interface IProtonSourceDetails {

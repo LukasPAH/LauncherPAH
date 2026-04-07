@@ -47,10 +47,3 @@ interface IProfile {
     version: string;
     protonOptions?: IProtonOptions;
 }
-
-interface IProtonOptions {
-    enableLogging?: boolean;
-    enableHDR?: boolean;
-    enableWayland?: boolean;
-    protonGDKVersion: string;
-}
