@@ -6,13 +6,14 @@ import { getVersionFolderFromName } from "../../managers/profile/readProfiles";
 import { run, spawnDetached } from "../../utils/bash";
 import * as tar from "tar";
 import { download } from "electron-dl";
-import { UMU_LINK } from "../../consts";
+import { SSL_CERTS_LINK, UMU_LINK } from "../../consts";
 import { BrowserWindow } from "electron";
 import { installProton } from "../../managers/proton/install";
 
 export async function launchLinuxVersion(profile: IProfile, customLaunchCommand?: string) {
     const protonOptions = await installProton(profile);
     await installUmu();
+    await installOpenSSLCert();
     const umuBinary = path.join(settings.launcherLocation, "umu", "umu-run");
 
     const profileFolder = path.join(settings.profilesLocation, profile.name);
@@ -72,6 +73,32 @@ async function installUmu() {
                     fsAsync.rm(file.path);
                 });
             promises.push(extraction);
+        },
+    });
+    await Promise.all(promises);
+}
+
+async function installOpenSSLCert() {
+    const window = BrowserWindow.getAllWindows()[0];
+
+    const certFolder = path.join(settings.installationsLocation, "etc", "ssl", "certs");
+    if (!fs.existsSync(certFolder)) {
+        await fsAsync.mkdir(certFolder, { recursive: true });
+    }
+
+    const bundleName = "ca-bundle.crt";
+    const certificate = path.join(certFolder, bundleName);
+    if (fs.existsSync(certificate)) {
+        return;
+    }
+
+    const promises: Promise<void>[] = [];
+    await download(window, SSL_CERTS_LINK, {
+        directory: certFolder,
+        onCompleted(file) {
+            const renamedCert = path.join(path.dirname(file.path), bundleName);
+            const rename = fsAsync.rename(file.path, renamedCert);
+            promises.push(rename);
         },
     });
     await Promise.all(promises);

@@ -30,7 +30,10 @@ export async function installProton(profile: IProfile): Promise<IProtonOptions> 
     };
     settings.setProtonOptions(profile, defaultProtonOptions);
 
-    await downloadProton(protonVersions, defaultProtonOptions, protonPath);
+    if (!existsSync(protonPath)) {
+        await downloadProton(protonVersions, defaultProtonOptions, protonPath);
+    }
+
     return defaultProtonOptions;
 }
 
