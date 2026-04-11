@@ -59,14 +59,20 @@ async function installUmu() {
 
     const tempDownloadPath = path.join(settings.launcherLocation, "tmp_download");
 
+    const promises: Promise<void>[] = [];
     await download(window, UMU_LINK, {
         directory: tempDownloadPath,
-        async onCompleted(file) {
-            await tar.extract({
-                file: file.path,
-                cwd: settings.launcherLocation,
-            });
-            await fsAsync.rm(file.path);
+        onCompleted(file) {
+            const extraction = tar
+                .extract({
+                    file: file.path,
+                    cwd: settings.launcherLocation,
+                })
+                .finally(() => {
+                    fsAsync.rm(file.path);
+                });
+            promises.push(extraction);
         },
     });
+    await Promise.all(promises);
 }
