@@ -37,9 +37,9 @@ export async function launchLinuxVersion(profile: IProfile, customLaunchCommand?
         environmentVariablesString += "PROTON_LOG=1 ";
     }
 
-    const protonFolder = path.join(settings.launcherLocation, "proton", "Proton-GDK");
+    const protonFolder = path.join(settings.launcherLocation, "proton", protonOptions.protonGDKVersion);
 
-    environmentVariablesString += `PROTON_LOG=0 PROTON_ENABLE_WAYLAND=1 PROTON_ENABLE_HDR=1 PROTONPATH=${protonFolder}/ `;
+    environmentVariablesString += `PROTONPATH=${protonFolder}/ `;
     environmentVariablesString += `PROTON_VERB=run WINEPREFIX='${profileFolder}'`;
     if (!fs.existsSync(path.join(profileFolder, "drive_c", "Program Files", "Microsoft GameInput", "x64"))) {
         await run(`${environmentVariablesString} ${umuBinary} ${inputInstallerLocation}`);

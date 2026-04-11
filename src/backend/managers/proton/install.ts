@@ -60,9 +60,9 @@ async function unpackProton(tarFile: File, path: string) {
     await tar.extract({
         file: tarFile.path,
         cwd: path,
-        transform: (entry) => {
-            entry.path = entry.path.replace(/^[^\/]+\//, "");
-            return entry;
+        onReadEntry(entry) {
+            entry.path = entry.path.replace(/^[^/]+\//, "");
         },
     });
+    await fsAsync.rm(tarFile.path);
 }
