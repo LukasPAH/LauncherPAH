@@ -140,9 +140,9 @@ export async function getDefaultProfileVersion() {
     const defaultProfile = data.settings.profiles.Default;
     if (defaultProfile.name === undefined || defaultProfile.version === undefined || defaultProfile.version === "") {
         data.settings.profiles.Default.name = "Default";
-        data.settings.profiles.Default.version = await getLatestRelease();
         data.settings.profiles.Default = defaultProfile;
     }
+    data.settings.profiles.Default.version = await getLatestRelease();
     writeLocalData(data);
     return defaultProfile;
 }
@@ -151,17 +151,17 @@ export async function getDefaultPreviewProfileVersion() {
     const defaultPreviewProfile = data.settings.profiles.Preview;
     if (defaultPreviewProfile.name === undefined || defaultPreviewProfile.version === undefined || defaultPreviewProfile.version === "") {
         data.settings.profiles.Preview.name = "Preview";
-        data.settings.profiles.Preview.version = await getLatestPreview();
         data.settings.profiles.Preview = defaultPreviewProfile;
     }
+    data.settings.profiles.Preview.version = await getLatestPreview();
     writeLocalData(data);
     return defaultPreviewProfile;
 }
 
 export async function updateDefaultProfileVersionsOnLaunch() {
-    data.settings.profiles.Default = {} as IProfile;
+    data.settings.profiles.Default = data?.settings?.profiles?.Default ?? ({} as IProfile);
     data.settings.profiles.Default = await getDefaultProfileVersion();
-    data.settings.profiles.Preview = {} as IProfile;
+    data.settings.profiles.Preview = data?.settings?.profiles?.Preview ?? ({} as IProfile);
     data.settings.profiles.Preview = await getDefaultPreviewProfileVersion();
     loadProfilesOnLaunch(data.settings.profiles);
     writeLocalData(data);
@@ -222,7 +222,6 @@ export function setDockerLocation(location: string) {
 }
 
 export function setProtonOptions(profile: IProfile, protonOptions: IProtonOptions) {
-    console.log(profile.name);
     data.settings.profiles[profile.name.replaceAll(" ", "_")].protonOptions = protonOptions;
     writeLocalData(data);
 }

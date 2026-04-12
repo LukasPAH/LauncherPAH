@@ -16,7 +16,7 @@ import path from "path";
 
 let profiles: IProfiles = {};
 
-export async function addProfile(name: string, versionIndex: number) {
+export async function addProfile(name: string, versionIndex: number, protonOptions?: IProtonOptions) {
     const profile = name.replaceAll(" ", "_");
     const versions = await getBackendVersionDB();
     const [_, versionName] = versions[versionIndex];
@@ -24,6 +24,10 @@ export async function addProfile(name: string, versionIndex: number) {
         name: name,
         version: versionName,
     };
+
+    if (protonOptions) {
+        profiles[profile].protonOptions = protonOptions;
+    }
 
     const profileFolder = path.join(profilesLocation, name);
     if (!fs.existsSync(profileFolder)) await fsAsync.mkdir(profileFolder);
@@ -44,21 +48,21 @@ export async function removeProfile(name: string, removeFolder = true) {
 export async function editProfile(name: string, index: number, beforeName: string) {
     const before = beforeName;
     const after = name;
+    const beforeProfile = profiles[before.replaceAll(" ", "_")];
     if (before === after) {
         const versions = await getBackendVersionDB();
         const [_, versionName] = versions[index];
-        profiles[before.replaceAll(" ", "_")] = {
-            name: name,
-            version: versionName,
-        };
+        beforeProfile.name = name;
+        beforeProfile.version = versionName;
         readProfiles();
         return;
     }
+    const protonOptions = beforeProfile.protonOptions;
     await removeProfile(before, false);
     const beforeProfileLocation = path.join(profilesLocation, beforeName);
     const afterProfileLocation = path.join(profilesLocation, name);
     if (fs.existsSync(beforeProfileLocation)) await fsAsync.rename(beforeProfileLocation, afterProfileLocation);
-    await addProfile(after, index);
+    await addProfile(after, index, protonOptions);
 }
 
 export function loadProfilesOnLaunch(profilesSetting: IProfiles) {
