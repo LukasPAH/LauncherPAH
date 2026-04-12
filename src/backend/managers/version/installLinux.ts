@@ -6,6 +6,10 @@ import * as fsAsync from "node:fs/promises";
 import * as fs from "node:fs";
 import { basename } from "path";
 import { moveExecutable } from "../../utils/move";
+import { download, File } from "electron-dl";
+import { MINGW_CURL_LINK } from "../../consts";
+import * as tar from "tar";
+import { BrowserWindow } from "electron";
 
 const dockerJSON = {
     services: {
@@ -133,6 +137,7 @@ New-Item ${windowsSharedLocation}\\install_complete.txt -type file
 
     window.webContents.send("progressStage", "Moving files to installation directory...");
     await run(`mv ${targetLocation} ${finalLocation}`);
+    await swapXCurl(finalLocation);
     run(`cd ${dockerFolder} && docker compose down`);
 
     window.webContents.send("progressStage", "idle");
@@ -209,4 +214,50 @@ async function hasDependencies(window: Electron.BrowserWindow): Promise<boolean>
     }
 
     return !shouldError;
+}
+
+export async function installMingwCurl() {
+    const window = BrowserWindow.getAllWindows()[0];
+    const promises: Promise<void>[] = [];
+    const tempDownloadPath = path.join(settings.launcherLocation, "tmp_download");
+    await download(window, MINGW_CURL_LINK, {
+        directory: tempDownloadPath,
+        onCompleted(file) {
+            const unpack = unpackMingCurl(file);
+            promises.push(unpack);
+        },
+    });
+    await Promise.all(promises);
+}
+
+async function unpackMingCurl(file: File) {
+    const dllName = "libcurl-4.dll";
+    const tempDownloadPath = path.join(settings.launcherLocation, "tmp_download");
+    await tar.extract({
+        file: file.path,
+        cwd: tempDownloadPath,
+        filter: (path) => {
+            return path.endsWith(dllName);
+        },
+        onReadEntry(entry) {
+            const dirname = path.dirname(entry.path);
+            entry.path = entry.path.replace(dirname, "");
+        },
+    });
+    await fsAsync.rm(file.path);
+    const libCurlDll = path.join(tempDownloadPath, dllName);
+    const dataFolder = path.join(settings.launcherLocation, "data");
+    await fsAsync.copyFile(libCurlDll, path.join(dataFolder, "XCurl.dll"));
+    await fsAsync.rm(libCurlDll);
+}
+
+async function swapXCurl(finalInstallationFolder: string) {
+    const xCurlDll = path.join(settings.launcherLocation, "data", "XCurl.dll");
+    const targetXCurlDll = path.join(finalInstallationFolder, "XCurl.dll");
+
+    if (!fs.existsSync(xCurlDll)) {
+        await installMingwCurl();
+    }
+
+    await fsAsync.copyFile(xCurlDll, targetXCurlDll);
 }
