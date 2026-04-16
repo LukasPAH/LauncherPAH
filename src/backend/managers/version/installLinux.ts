@@ -91,7 +91,8 @@ export async function installLinux(file: string, window: Electron.BrowserWindow,
     await run(`mv ${file} ${sharedFolder}`);
 
     const windowsInstallLocation = isBeta ? settings.getDefaultPreviewLocation() : settings.getReleaseLocation();
-    const windowsSharedLocation = `C:\\Users\\Docker\\Desktop\\Shared`;
+    const windowsDesktop = `C:\\Users\\Docker\\Desktop`;
+    const windowsSharedLocation = windowsDesktop + `\\Shared`;
     const targetWindowsLocation = `${windowsSharedLocation}\\${fileName.replace(".msixvc", "") + (sideloaded ? "_sideloaded" : "")}`;
 
     const ingoredDlls = sideloaded ? "Microsoft.WindowsAppRuntime.Bootstrap.dll" : "";
@@ -108,7 +109,16 @@ catch {
 move "${windowsSharedLocation}\\${fileName}" C:\\Users\\Docker\\Desktop
 Add-AppxPackage 'C:\\Users\\Docker\\Desktop\\${fileName}' -Volume 'C:\\XboxGames'
 ${moveExecutable(windowsInstallLocation, targetWindowsLocation)}
-robocopy "${windowsInstallLocation}" "${targetWindowsLocation}" /XF *.exe ${ingoredDlls} /E /MOVE /MT:8 /W:5 /NFL /NDL
+
+try {
+    & "C:\\Program Files\\7-Zip\\7z.exe" a -tzip "${windowsDesktop + "\\data.zip"}" "${windowsInstallLocation + "\\data"}"
+    Move-Item -Path "${windowsDesktop + "\\data.zip"}" -Destination "${targetWindowsLocation}" -Force
+    robocopy "${windowsInstallLocation}" "${targetWindowsLocation}" /XF *.exe ${ingoredDlls} /XD data /E /MOVE /MT:8 /W:5 /NFL /NDL
+}
+catch {
+    robocopy "${windowsInstallLocation}" "${targetWindowsLocation}" /XF *.exe ${ingoredDlls} /E /MOVE /MT:8 /W:5 /NFL /NDL
+}
+
 try {
     $name = (Get-AppxPackage -Name "${isBeta ? settings.previewPackageName : settings.releasePackageName}").PackageFullName; Remove-AppxPackage -Package $name;
 }
@@ -139,6 +149,11 @@ New-Item ${windowsSharedLocation}\\install_complete.txt -type file
     await run(`mv ${targetLocation} ${finalLocation}`);
     await swapXCurl(finalLocation);
     run(`cd ${dockerFolder} && docker compose down`);
+
+    if (fs.existsSync(path.join(finalLocation, "data.zip"))) {
+        await run(`cd ${finalLocation} && unzip -o data.zip > /dev/null`, true);
+        fsAsync.rm(path.join(finalLocation, "data.zip"));
+    }
 
     window.webContents.send("progressStage", "idle");
     settings.setInstallationLock(false);
