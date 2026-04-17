@@ -40,19 +40,14 @@ const installBatContents = `@echo off
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command "& { Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH*'; Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0; Start-Service sshd; Set-Service -Name sshd -StartupType Automatic; if (-not (Get-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -ErrorAction SilentlyContinue)) { Write-Output 'Firewall Rule OpenSSH-Server-In-TCP does not exist, creating it...'; New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22 } else { Write-Output 'Firewall rule OpenSSH-Server-In-TCP already exists.' } }"`;
 
-export async function installLinux(file: string, window: Electron.BrowserWindow, isBeta: boolean, sideloaded = false, profile?: IProfile) {
-    settings.setInstallationLock(true);
+export async function startDocker(window: Electron.BrowserWindow): Promise<string | undefined> {
     const hasAllDependencies = await hasDependencies(window);
     if (!hasAllDependencies) return;
 
-    const fileName = basename(file);
     const dockerFolder = settings.getDockerLocation();
     const dockerFileLocation = path.join(dockerFolder, "docker-compose.yml");
     const folderNames = ["shared", "storage", "oem"];
     const oemFolder = path.join(dockerFolder, "oem");
-    const sharedFolder = path.join(dockerFolder, "shared");
-    const targetLocation = path.join(sharedFolder, fileName.replace(".msixvc", "") + (sideloaded ? "_sideloaded" : ""));
-    const finalLocation = path.join(settings.installationsLocation, fileName.replace(".msixvc", "") + (sideloaded ? "_sideloaded" : ""));
     const installBatLocation = path.join(oemFolder, "install.bat");
     await createDockerFolders(folderNames, dockerFolder);
 
@@ -86,7 +81,28 @@ export async function installLinux(file: string, window: Electron.BrowserWindow,
     window.webContents.send("progressStage", "Please set up windows (WIP)");
     //run("xfreerdp /v:localhost:3389 /u:Docker /p:admin /cert:ignore");
 
+    return ip;
+}
+
+export async function installLinux(file: string, window: Electron.BrowserWindow, isBeta: boolean, sideloaded = false, profile?: IProfile, dockerIp?: string) {
+    settings.setInstallationLock(true);
+    const fileName = basename(file);
+    const dockerFolder = settings.getDockerLocation();
+    const sharedFolder = path.join(dockerFolder, "shared");
+    const targetLocation = path.join(sharedFolder, fileName.replace(".msixvc", "") + (sideloaded ? "_sideloaded" : ""));
+    const finalLocation = path.join(settings.installationsLocation, fileName.replace(".msixvc", "") + (sideloaded ? "_sideloaded" : ""));
+
+    let ip = dockerIp;
+
+    if (ip === undefined) {
+        ip = await startDocker(window);
+        if (ip === undefined) {
+            return;
+        }
+    }
+
     window.webContents.send("progressStage", "Moving MSIXVC to Windows...");
+
     // Using built in move since it is faster.
     await run(`mv ${file} ${sharedFolder}`);
 

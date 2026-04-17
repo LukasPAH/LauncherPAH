@@ -7,7 +7,7 @@ import { setInstallationLock } from "../../settings";
 import { install } from "../../managers/version/install";
 import { getBackendVersionDB } from "../../managers/version/availableVersions";
 import os from "node:os";
-import { installLinux } from "../../managers/version/installLinux";
+import { installLinux, startDocker } from "../../managers/version/installLinux";
 
 export async function downloadVersion(DBIndex: number, profile: IProfile) {
     setInstallationLock(true);
@@ -57,9 +57,18 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
     }
     const previewOrRelease = versionName.toLowerCase().includes("minecraftwindowsbeta") ? "Preview " : "Release ";
 
+    const promises: Promise<string | undefined>[] = [];
+
+    let dockerIp: string | undefined = undefined;
+
     let dataLocation = process.env.APPDATA;
     if (os.platform() === "linux" && process.env.HOME) {
         dataLocation = path.join(process.env.HOME, "Games");
+
+        // Start docker container early while downloading so we don't waste time
+        // starting docker after the download.
+        const startDockerProcess = startDocker(window);
+        promises.push(startDockerProcess);
     }
 
     if (dataLocation === undefined) {
@@ -71,6 +80,7 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
     if (!fs.existsSync(path.join(tempDownloadPath, versionName, ".msixvc"))) {
         await download(window, urlToUse, {
             directory: tempDownloadPath,
+            overwrite: true,
             onProgress(progress) {
                 window.webContents.send("downloadProgress", progress, previewOrRelease + versionNumber);
             },
@@ -90,6 +100,12 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
         await install(filePath, window, isBeta, false, profile);
     }
     if (os.platform() === "linux") {
-        await installLinux(filePath, window, isBeta, false, profile);
+        (await Promise.all(promises)).forEach((ip) => {
+            dockerIp = ip;
+        });
+        if (dockerIp === undefined) {
+            return;
+        }
+        await installLinux(filePath, window, isBeta, false, profile, dockerIp);
     }
 }
