@@ -1,8 +1,8 @@
-import { BrowserWindow } from "electron";
 import * as settings from "../../settings";
 import * as fsAsync from "fs/promises";
 import fs from "fs";
 import path from "path";
+import { window } from "../../main";
 
 const versionRegex = /(\d+)\.(\d+)\.(\d+)$/;
 const calVerStartNumber = 26;
@@ -11,8 +11,6 @@ const installLocation = path.join(settings.launcherLocation, "installations");
 let installedVersions: string[] = [];
 
 export async function readInstalledVersions(): Promise<void> {
-    const window = BrowserWindow.getAllWindows()[0];
-
     const installations = await fsAsync.readdir(installLocation, { recursive: false });
 
     const installedVersionsForUI: string[] = [];
@@ -28,7 +26,7 @@ export async function readInstalledVersions(): Promise<void> {
         }
     });
 
-    window.webContents.send("installedVersions", installedVersionsForUI);
+    window?.webContents.send("installedVersions", installedVersionsForUI);
 }
 
 export function prettifyVersionNumbers(version: string): string | undefined {

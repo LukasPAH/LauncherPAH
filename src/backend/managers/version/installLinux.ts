@@ -9,7 +9,8 @@ import { moveExecutable } from "../../utils/move";
 import { download, File } from "electron-dl";
 import { MINGW_CURL_LINK } from "../../consts";
 import * as tar from "tar";
-import { BrowserWindow } from "electron";
+
+import { window } from "../../main";
 
 const dockerJSON = {
     services: {
@@ -57,7 +58,7 @@ export async function startDocker(window: Electron.BrowserWindow): Promise<strin
     window.webContents.send("progressStage", "Starting Docker...");
     const composeOutput = await run(`cd ${dockerFolder} && docker compose down && docker compose up -d`, true);
     if (composeOutput.startsWith("Error:")) {
-        window.webContents.send("showError", composeOutput);
+        window.webContents.send("showModalMessage", composeOutput);
         window.webContents.send("progressStage", "idle");
         settings.setInstallationLock(false);
         return;
@@ -66,7 +67,7 @@ export async function startDocker(window: Electron.BrowserWindow): Promise<strin
     window.webContents.send("progressStage", "Installing Docker dependencies...");
     const execOutput = await run(`cd ${dockerFolder} && docker exec -t MinecraftInstaller /bin/bash -c "apt update && apt install -y ssh sshpass"`);
     if (execOutput.startsWith("Error:")) {
-        window.webContents.send("showError", execOutput);
+        window.webContents.send("showModalMessage", execOutput);
         window.webContents.send("progressStage", "idle");
         settings.setInstallationLock(false);
         return;
@@ -240,7 +241,7 @@ async function hasDependencies(window: Electron.BrowserWindow): Promise<boolean>
         errorString = errorString.replace(/, $/, "");
         console.log(errorString);
         window.webContents.send("progressStage", "idle");
-        window.webContents.send("showError", errorString);
+        window.webContents.send("showModalMessage", errorString);
         settings.setInstallationLock(false);
     }
 
@@ -248,7 +249,9 @@ async function hasDependencies(window: Electron.BrowserWindow): Promise<boolean>
 }
 
 export async function installMingwCurl() {
-    const window = BrowserWindow.getAllWindows()[0];
+    if (window === null) {
+        return;
+    }
     const promises: Promise<void>[] = [];
     const tempDownloadPath = path.join(settings.launcherLocation, "tmp_download");
     await download(window, MINGW_CURL_LINK, {

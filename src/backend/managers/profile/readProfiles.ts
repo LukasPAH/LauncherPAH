@@ -8,11 +8,12 @@ import {
     profilesLocation,
 } from "../../settings";
 import { getBackendVersionDB } from "../version/availableVersions";
-import { BrowserWindow } from "electron";
+
 import { uglifyVersionNumbers } from "../version/readVersions";
 import * as fsAsync from "fs/promises";
 import * as fs from "fs";
 import path from "path";
+import { window } from "../../main";
 
 let profiles: IProfiles = {};
 
@@ -40,7 +41,7 @@ export async function removeProfile(name: string, removeFolder = true) {
     const profile = name.replaceAll(" ", "_");
     delete profiles[profile];
     const profileFolder = path.join(profilesLocation, name);
-    if (fs.existsSync(profileFolder) && removeFolder === true) await fsAsync.rmdir(profileFolder, { recursive: true });
+    if (fs.existsSync(profileFolder) && removeFolder === true) await fsAsync.rm(profileFolder, { recursive: true });
     removeProfileSetting(profile);
     readProfiles();
 }
@@ -76,13 +77,12 @@ export function readProfiles() {
     const index = values.findIndex((value) => {
         return value.name === lastProfile;
     });
-    const window = BrowserWindow.getAllWindows()[0];
     if (index === -1) {
         updateLastLaunchedProfileName("Default");
         const profile = getProfileFromName("Default");
-        window.webContents.send("selectedProfile", profile);
+        window?.webContents.send("selectedProfile", profile);
     }
-    window.webContents.send("createdProfiles", profiles);
+    window?.webContents.send("createdProfiles", profiles);
 }
 
 export function getProfileFromName(name: string): IProfile | undefined {

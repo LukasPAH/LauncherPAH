@@ -1,15 +1,11 @@
+import { window } from "../../main";
 import { updateLastLaunchedProfileName } from "../../settings";
-import { BrowserWindow } from "electron";
 
 export async function setSelectedProfile(profile: IProfile) {
-    const window = BrowserWindow.getAllWindows()[0];
     updateLastLaunchedProfileName(profile.name);
-
-    window.webContents.send("selectedProfile", profile);
+    window?.webContents.send("selectedProfile", profile);
 }
 
 export async function setSelectedProfileOnStart(profile: IProfile) {
-    const window = BrowserWindow.getAllWindows()[0];
-
-    window.webContents.send("selectedProfile", profile);
+    window?.webContents.send("selectedProfile", profile);
 }

@@ -24,7 +24,7 @@ import { getProfileFromName } from "./managers/profile/readProfiles";
 import { handleAssociations, getLaunchedFile, launchFile } from "./events/responses/handleAssociations";
 import { getProtonVersions } from "./managers/proton/getAvailableVersions";
 
-let window: BrowserWindow | null = null;
+export let window: BrowserWindow | null = null;
 let launchedFile: string | undefined = undefined;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.

@@ -2,8 +2,9 @@ import fs from "fs";
 import { getLatestRelease, getLatestPreview } from "./managers/version/availableVersions";
 import { loadProfilesOnLaunch } from "./managers/profile/readProfiles";
 import path from "path";
-import { BrowserWindow } from "electron";
+
 import os from "node:os";
+import { window } from "./main";
 
 let dataLocation = process.env.APPDATA ?? "";
 if (os.platform() === "linux" && process.env.HOME) {
@@ -192,8 +193,7 @@ export function getInstallationLock() {
 
 export function setInstallationLock(lock: boolean) {
     installationLock = lock;
-    const window = BrowserWindow.getAllWindows()[0];
-    window.webContents.send("installationLock", lock);
+    window?.webContents.send("installationLock", lock);
 }
 
 export function getDockerLocation(): string {

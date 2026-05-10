@@ -1,9 +1,9 @@
-import { BrowserWindow } from "electron";
 import { installationsLocation } from "../../settings";
 import * as fsAsync from "node:fs/promises";
 import * as fs from "fs";
 import * as path from "path";
 import { prettifyVersionNumbers } from "./readVersions";
+import { window } from "../../main";
 
 const versionDB = "https://raw.githubusercontent.com/LukasPAH/minecraft-windows-gdk-version-db/refs/heads/main/historical_versions.json";
 
@@ -34,7 +34,6 @@ export async function getLatestPreview() {
 }
 
 export async function getAvailableVersions() {
-    const window = BrowserWindow.getAllWindows()[0];
     try {
         const response = await fetch(versionDB, {
             headers: {
@@ -85,7 +84,7 @@ export async function getAvailableVersions() {
             return nameA.localeCompare(nameB);
         });
 
-        window.webContents.send("availableVersions", versionNamesForUI);
+        window?.webContents.send("availableVersions", versionNamesForUI);
     } catch (error) {
         console.error("Error fetching external JSON:", error);
     }

@@ -3,8 +3,9 @@ import * as settings from "../../settings";
 import path from "path";
 import { existsSync } from "fs";
 import { download, File } from "electron-dl";
-import { BrowserWindow } from "electron";
+
 import * as tar from "tar";
+import { window } from "../../main";
 
 export async function installProton(profile: IProfile): Promise<IProtonOptions> {
     const protonFileLocation = path.join(settings.launcherLocation, "data", "proton_versions.json");
@@ -38,7 +39,9 @@ export async function installProton(profile: IProfile): Promise<IProtonOptions> 
 }
 
 async function downloadProton(versions: IAvailableProtonVersion[], protonOptions: IProtonOptions, path: string) {
-    const window = BrowserWindow.getAllWindows()[0];
+    if (window === null) {
+        return;
+    }
     const version = versions.find((version) => {
         return version.name === protonOptions.protonGDKVersion;
     });
@@ -47,16 +50,16 @@ async function downloadProton(versions: IAvailableProtonVersion[], protonOptions
     await download(window, url, {
         directory: path,
         onProgress(progress) {
-            window.webContents.send("downloadProgress", progress, "Proton");
+            window?.webContents.send("downloadProgress", progress, "Proton");
         },
         onCompleted(file) {
-            window.webContents.send("downloadCompleted", "Proton");
-            window.webContents.send("progressStage", "Unpacking proton...");
+            window?.webContents.send("downloadCompleted", "Proton");
+            window?.webContents.send("progressStage", "Unpacking proton...");
             promises.push(unpackProton(file, path));
         },
     });
     await Promise.all(promises);
-    window.webContents.send("progressStage", "idle");
+    window?.webContents.send("progressStage", "idle");
 }
 
 async function unpackProton(tarFile: File, path: string) {

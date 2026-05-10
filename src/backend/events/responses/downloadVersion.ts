@@ -1,4 +1,3 @@
-import { BrowserWindow } from "electron";
 import { download } from "electron-dl";
 import * as path from "path";
 import fs from "fs";
@@ -8,10 +7,13 @@ import { install } from "../../managers/version/install";
 import { getBackendVersionDB } from "../../managers/version/availableVersions";
 import os from "node:os";
 import { installLinux, startDocker } from "../../managers/version/installLinux";
+import { window } from "../../main";
 
 export async function downloadVersion(DBIndex: number, profile: IProfile) {
+    if (window === null) {
+        return;
+    }
     setInstallationLock(true);
-    const window = BrowserWindow.getAllWindows()[0];
     window.webContents.send("startDownload", true);
     let filePath: string | undefined = undefined;
 
@@ -82,11 +84,11 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
             directory: tempDownloadPath,
             overwrite: true,
             onProgress(progress) {
-                window.webContents.send("downloadProgress", progress, previewOrRelease + versionNumber);
+                window?.webContents.send("downloadProgress", progress, previewOrRelease + versionNumber);
             },
             onCompleted(file) {
                 filePath = file.path;
-                window.webContents.send("downloadCompleted", previewOrRelease + versionNumber);
+                window?.webContents.send("downloadCompleted", previewOrRelease + versionNumber);
             },
         });
         if (filePath === undefined) return;

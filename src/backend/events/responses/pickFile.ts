@@ -1,11 +1,14 @@
-import { BrowserWindow, dialog } from "electron";
+import { dialog } from "electron";
 import { install } from "../../managers/version/install";
 import { installLinux } from "../../managers/version/installLinux";
 import { prettifyVersionNumbers } from "../../managers/version/readVersions";
 import os from "node:os";
+import { window } from "../../main";
 
 export async function pickFile() {
-    const window = BrowserWindow.getAllWindows()[0];
+    if (window === null) {
+        return;
+    }
 
     const chosenFiles = await dialog.showOpenDialog(window, {
         properties: ["openFile"],

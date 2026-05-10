@@ -1,5 +1,6 @@
 import { BrowserWindow } from "electron";
 import { sleep } from "../../utils/sleep";
+import { window } from "../../main";
 
 interface IDeviceCodeResponse {
     user_code: string;
@@ -36,6 +37,13 @@ export async function authenticate(): Promise<string | undefined> {
 
     const json = (await response.json()) as IDeviceCodeResponse;
     const { verification_uri, device_code, expires_in, user_code } = json;
+
+    window?.webContents.send(
+        "showModalMessage",
+        `A new window will appear shortly. Please enter the following code into the box that pops up and follow the prompts to sign into Minecraft.\n${user_code}`,
+        "Sign in Required",
+    );
+
     console.log(user_code);
 
     const height = 600;
@@ -71,6 +79,7 @@ export async function authenticate(): Promise<string | undefined> {
 
     clearInterval(interval);
     authWindow.destroy();
+    window?.webContents.send("hideModalMessage");
 
     return refreshToken;
 }

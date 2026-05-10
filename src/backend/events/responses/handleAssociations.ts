@@ -1,14 +1,14 @@
 import * as path from "path";
 import { fileAssociations } from "../../../../fileAssociations.cjs";
-import { BrowserWindow } from "electron";
+
 import { getVersionFolderFromName } from "../../managers/profile/readProfiles";
 import { installationsLocation } from "../../settings";
 import { launchVersion } from "./launchVersion";
+import { window } from "../../main";
 
 let fileToLaunch = "";
 
 export async function handleAssociations(filePathLocation: string | string[]) {
-    const window = BrowserWindow.getAllWindows()[0];
     let filePath = "";
     if (typeof filePathLocation === "string") filePath = filePathLocation;
     else {
@@ -21,7 +21,7 @@ export async function handleAssociations(filePathLocation: string | string[]) {
     }
     if (filePath === "") return;
     fileToLaunch = filePath;
-    window.webContents.send("launchedFile", path.basename(filePath));
+    window?.webContents.send("launchedFile", path.basename(filePath));
 }
 
 export function getLaunchedFile(args: string[]) {

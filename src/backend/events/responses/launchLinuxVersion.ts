@@ -7,8 +7,10 @@ import { run, spawnDetached } from "../../utils/bash";
 import * as tar from "tar";
 import { download } from "electron-dl";
 import { SSL_CERTS_LINK, UMU_LINK } from "../../consts";
-import { BrowserWindow } from "electron";
+
 import { installProton } from "../../managers/proton/install";
+import { authenticate } from "./authenticate";
+import { window } from "../../main";
 
 export async function launchLinuxVersion(profile: IProfile, customLaunchCommand?: string) {
     const protonOptions = await installProton(profile);
@@ -46,13 +48,16 @@ export async function launchLinuxVersion(profile: IProfile, customLaunchCommand?
         await run(`${environmentVariablesString} ${umuBinary} ${inputInstallerLocation}`);
     }
 
-    spawnDetached(`${environmentVariablesString} ${umuBinary} ${versionLocation}`);
+    const hasPrefix = await tryCreateAndAuthenticatePrefix(environmentVariablesString, umuBinary, profile);
+
+    if (hasPrefix) {
+        spawnDetached(`${environmentVariablesString} ${umuBinary} ${versionLocation}`);
+    }
 
     settings.updateLastLaunchedProfileName(profile.name);
 }
 
 async function installUmu() {
-    const window = BrowserWindow.getAllWindows()[0];
     const binary = path.join(settings.launcherLocation, "umu", "umu-run");
     if (fs.existsSync(binary)) {
         return;
@@ -61,6 +66,9 @@ async function installUmu() {
     const tempDownloadPath = path.join(settings.launcherLocation, "tmp_download");
 
     const promises: Promise<void>[] = [];
+    if (window === null) {
+        return;
+    }
     await download(window, UMU_LINK, {
         directory: tempDownloadPath,
         onCompleted(file) {
@@ -79,7 +87,9 @@ async function installUmu() {
 }
 
 async function installOpenSSLCert() {
-    const window = BrowserWindow.getAllWindows()[0];
+    if (window === null) {
+        return;
+    }
 
     const certFolder = path.join(settings.installationsLocation, "etc", "ssl", "certs");
     if (!fs.existsSync(certFolder)) {
@@ -102,4 +112,47 @@ async function installOpenSSLCert() {
         },
     });
     await Promise.all(promises);
+}
+
+async function tryCreateAndAuthenticatePrefix(environmentVariablesString: string, umuBinary: string, profile: IProfile): Promise<boolean> {
+    const profileFolder = path.join(settings.profilesLocation, profile.name);
+    const userRegFile = path.join(profileFolder, "user.reg");
+    if (!fs.existsSync(userRegFile)) {
+        await run(`${environmentVariablesString} ${umuBinary} ""`, true);
+    }
+    const userRegFileContents = (await fsAsync.readFile(userRegFile)).toString();
+
+    const XUserRegKey = "[Software\\\\Wine\\\\WineGDK\\\\XUser]";
+
+    if (!userRegFileContents.includes(XUserRegKey)) {
+        const authenticated = await authenticateAndUpdateUserRegistry(profile, userRegFileContents);
+        return authenticated;
+    }
+
+    return true;
+}
+
+async function authenticateAndUpdateUserRegistry(profile: IProfile, registryContents: string): Promise<boolean> {
+    const refreshToken = await authenticate();
+    if (refreshToken === undefined) {
+        return false;
+    }
+
+    const unixTime = Date.now();
+    const epochDiff = 116_444_736_000_000_000n;
+
+    const profileFolder = path.join(settings.profilesLocation, profile.name);
+    const userRegFile = path.join(profileFolder, "user.reg");
+
+    const regKey = `
+[Software\\\\Wine\\\\WineGDK\\\\XUser] ${unixTime}
+#time=${(BigInt(unixTime) * 10_000n * epochDiff).toString(16)}
+"ClientId"="0000000040159362"
+"RefreshToken"="${refreshToken}"
+`;
+
+    const newRegistry = registryContents + regKey;
+    await fsAsync.writeFile(userRegFile, newRegistry);
+
+    return true;
 }

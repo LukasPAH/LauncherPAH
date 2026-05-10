@@ -2,10 +2,9 @@ import * as React from "react";
 import Tabs from "./tabs";
 import Box from "@mui/material/Box";
 import DownloadProgress from "./progress";
-import "../styles.css";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import OpenFile from "./openFile";
-import ErrorModal from "./errorModal";
+import ModalMessage from "./modalMessage";
 
 window.addEventListener("load", () => {
     window.electronAPI.send("UILoaded", undefined);
@@ -28,7 +27,7 @@ export default function MainWindow() {
     const [openedFile, setOpenedFile] = React.useState(false);
     const [openFileName, setOpenFileName] = React.useState("");
     const [installationLock, setInstallationLock] = React.useState(false);
-    const [error, setError] = React.useState([false, ""] as [boolean, string]);
+    const [modalMessage, showModalMessage] = React.useState([false, "", ""] as [boolean, string, string]);
 
     window.electronAPI.on("selectedProfile", (profile: IProfile) => {
         setSelectedProfile(profile);
@@ -47,8 +46,8 @@ export default function MainWindow() {
         setInstallationLock(value);
     });
 
-    window.electronAPI.on("showError", (message) => {
-        setError([true, message]);
+    window.electronAPI.on("showModalMessage", (message, title) => {
+        showModalMessage([true, message, title]);
     });
 
     function openFileCallback(profile: IProfile) {
@@ -78,7 +77,7 @@ export default function MainWindow() {
                         <DownloadProgress />
                     </Box>
                 </Box>
-                <ErrorModal error={error}></ErrorModal>
+                <ModalMessage message={modalMessage}></ModalMessage>
             </div>
         </ThemeProvider>
     );
