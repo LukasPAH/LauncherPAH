@@ -23,6 +23,7 @@ import { tryMigrageGDKUserData } from "./managers/profile/profileFolder";
 import { getProfileFromName } from "./managers/profile/readProfiles";
 import { handleAssociations, getLaunchedFile, launchFile } from "./events/responses/handleAssociations";
 import { getProtonVersions } from "./managers/proton/getAvailableVersions";
+import { watchForLoginJSON } from "./events/responses/authenticate";
 
 export let window: BrowserWindow | null = null;
 let launchedFile: string | undefined = undefined;
@@ -84,6 +85,7 @@ app.whenReady().then(async () => {
         launchedFile = getLaunchedFile(process.argv);
     }
     ipcMain.on("UILoaded", async () => {
+        watchForLoginJSON();
         await getProtonVersions();
         await readInstalledVersions();
         await getAvailableVersions();

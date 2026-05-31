@@ -11,6 +11,7 @@ import { MINGW_CURL_LINK } from "../../consts";
 import * as tar from "tar";
 
 import { window } from "../../main";
+import { editConfigFile } from "../../utils/editGameConfig";
 
 const dockerJSON = {
     services: {
@@ -115,6 +116,7 @@ export async function installLinux(file: string, window: Electron.BrowserWindow,
     const ingoredDlls = sideloaded ? "Microsoft.WindowsAppRuntime.Bootstrap.dll" : "";
 
     const installScript = `
+Start-Transcript -Path "${windowsSharedLocation}\\log.txt"
 mkdir ${targetWindowsLocation}
 try {
     $name = (Get-AppxPackage -Name "${isBeta ? settings.previewPackageName : settings.releasePackageName}").PackageFullName; Remove-AppxPackage -Package $name;
@@ -143,6 +145,7 @@ catch {
     Write-Host "Package not installed, skipping remove."
 }
 Remove-Item -Path "C:\\Users\\Docker\\Desktop\\${fileName}" -Force
+Stop-Transcript
 New-Item ${windowsSharedLocation}\\install_complete.txt -type file
 `;
 
@@ -171,6 +174,8 @@ New-Item ${windowsSharedLocation}\\install_complete.txt -type file
         await run(`cd ${finalLocation} && unzip -o data.zip > /dev/null`, true);
         fsAsync.rm(path.join(finalLocation, "data.zip"));
     }
+
+    await editConfigFile(finalLocation);
 
     window.webContents.send("progressStage", "idle");
     settings.setInstallationLock(false);

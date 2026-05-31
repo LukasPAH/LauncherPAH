@@ -1,43 +1,72 @@
 import { BrowserWindow } from "electron";
 import { sleep } from "../../utils/sleep";
 import { window } from "../../main";
+import * as fsAsync from "fs/promises";
+import * as path from "path";
+import os from "node:os";
+import * as settings from "../../settings";
 
-interface IDeviceCodeResponse {
+interface ILoginJSON {
     user_code: string;
-    device_code: string;
     verification_uri: string;
-    interval: number;
-    expires_in: number;
 }
 
-interface IOAuthResponse {
-    token_type: string;
-    expires_in: number;
-    scope: string;
-    access_token: string;
-    refresh_token: string;
-    user_ud: string;
+export async function watchForLoginJSON() {
+    if (os.platform() !== "linux") {
+        return;
+    }
+
+    const folder = settings.installationsLocation;
+
+    const watcher = fsAsync.watch(folder, { recursive: false });
+    const loginFile = path.join(folder, "login.json");
+    for await (const event of watcher) {
+        if (event.eventType === "change" && event.filename === "login.json") {
+            try {
+                const loginString = (await fsAsync.readFile(loginFile)).toString();
+                const loginJSON = parseLoginJSON(loginString);
+                if (loginJSON) {
+                    await authenticate(loginJSON.verification_uri, loginJSON.user_code);
+                }
+                await fsAsync.rm(loginFile);
+            } catch {
+                continue;
+            }
+        }
+    }
 }
+
+function parseLoginJSON(dataString: string): ILoginJSON | undefined {
+    const json = JSON.parse(dataString);
+
+    const returnJSON: ILoginJSON = {
+        user_code: "",
+        verification_uri: "",
+    };
+
+    const user_code = json.user_code;
+    const verification_uri = json.verification_uri;
+
+    if (typeof user_code === "string") {
+        returnJSON.user_code = user_code;
+    } else {
+        return undefined;
+    }
+
+    if (typeof verification_uri === "string") {
+        returnJSON.verification_uri = verification_uri;
+    } else {
+        return undefined;
+    }
+
+    return returnJSON;
+}
+
 /**
  *
  * @returns The refresh token after authenticating, or undefined if unable to authenticate.
  */
-export async function authenticate(): Promise<string | undefined> {
-    const response = await fetch("https://login.live.com/oauth20_connect.srf", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: "client_id=0000000040159362&scope=service::user.auth.xboxlive.com::MBI_SSL&response_type=device_code",
-    });
-
-    if (!response.ok) {
-        return undefined;
-    }
-
-    const json = (await response.json()) as IDeviceCodeResponse;
-    const { verification_uri, device_code, expires_in, user_code } = json;
-
+export async function authenticate(verification_uri: string, user_code: string) {
     window?.webContents.send(
         "showModalMessage",
         `A new window will appear shortly. Please enter the following code into the box that pops up and follow the prompts to sign into Minecraft.\n${user_code}`,
@@ -52,34 +81,16 @@ export async function authenticate(): Promise<string | undefined> {
     authWindow.removeMenu();
     authWindow.loadURL(verification_uri);
 
-    let secondsPassed = 0;
-    const interval = setInterval(() => {
-        secondsPassed++;
-    }, 1000);
+    const always = true;
 
-    let refreshToken: string | undefined = undefined;
-
-    while (secondsPassed < expires_in * 1000) {
-        const oauthResponse = await fetch("https://login.live.com/oauth20_token.srf", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: `device_code=${device_code}&client_id=0000000040159362&grant_type=device_code`,
-        });
-
-        if (oauthResponse.ok) {
-            const oauthJson = (await oauthResponse.json()) as IOAuthResponse;
-            refreshToken = oauthJson.refresh_token;
+    while (always) {
+        await sleep(1500);
+        const url = authWindow?.webContents?.getURL();
+        if (url.includes("&status=")) {
             break;
         }
-
-        await sleep(1500);
     }
 
-    clearInterval(interval);
-    authWindow.destroy();
-    window?.webContents.send("hideModalMessage");
-
-    return refreshToken;
+    authWindow?.destroy();
+    window?.webContents?.send("hideModalMessage");
 }
