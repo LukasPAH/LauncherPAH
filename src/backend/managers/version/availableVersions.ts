@@ -4,11 +4,11 @@ import * as fs from "fs";
 import * as path from "path";
 import { prettifyVersionNumbers } from "./readVersions";
 import { window } from "../../main";
+import { sort } from "semver-ts";
 
 const versionDB = "https://raw.githubusercontent.com/LukasPAH/minecraft-windows-gdk-version-db/refs/heads/main/historical_versions.json";
 
-let backendVersionDB: [string[], string][] = [];
-const cachedVersions: [string[], string][] = [];
+const backendVersionDB: [string[], string][] = [];
 
 export async function getBackendVersionDB() {
     if (backendVersionDB.length === 0) await getAvailableVersions();
@@ -33,11 +33,13 @@ export async function getLatestPreview() {
     return latestPreviewName;
 }
 
+const versionsObject: IVersionUrlsAndType = {};
+
 export async function getAvailableVersions() {
     try {
         const response = await fetch(versionDB, {
             headers: {
-                Accept: "application/json", // Request JSON response
+                Accept: "application/json",
             },
         });
         if (!response.ok) {
@@ -46,16 +48,40 @@ export async function getAvailableVersions() {
         const jsonData = (await response.json()) as IHistoricalVersionsJSON;
         const versionNamesForUI: string[] = [];
 
-        backendVersionDB = [];
+        const semverVersions: string[] = [];
+
         for (const previewVersions of jsonData.previewVersions) {
-            versionNamesForUI.push(previewVersions.version);
-            backendVersionDB.push([previewVersions.urls, previewVersions.version]);
-            cachedVersions.push([previewVersions.urls, previewVersions.version]);
+            const semver = previewVersions.version.replace("Preview ", "");
+            const urlsAndType: IUrlsAndType = {
+                urls: previewVersions.urls,
+                type: "Preview",
+            };
+            versionsObject[semver] = urlsAndType;
+            semverVersions.push(semver);
         }
         for (const releaseVersion of jsonData.releaseVersions) {
-            versionNamesForUI.push(releaseVersion.version);
-            backendVersionDB.push([releaseVersion.urls, releaseVersion.version]);
-            cachedVersions.push([releaseVersion.urls, releaseVersion.version]);
+            const semver = releaseVersion.version.replace("Release ", "");
+            const urlsAndType: IUrlsAndType = {
+                urls: releaseVersion.urls,
+                type: "Release",
+            };
+            versionsObject[semver] = urlsAndType;
+            semverVersions.push(semver);
+        }
+
+        const sortedVersions = sort(semverVersions, { loose: true });
+
+        for (const sortedVersion of sortedVersions) {
+            const versionObject = versionsObject[sortedVersion];
+            if (versionObject === undefined) {
+                continue;
+            }
+
+            const { type, urls } = versionObject;
+            const versionName = `${type} ${sortedVersion}`;
+
+            versionNamesForUI.push(versionName);
+            backendVersionDB.push([urls, versionName]);
         }
 
         const installations = await fsAsync.readdir(installationsLocation, { recursive: false });
@@ -71,17 +97,6 @@ export async function getAvailableVersions() {
                 versionNamesForUI.push(prettyName);
                 backendVersionDB.push([[], prettyName]);
             }
-        });
-
-        backendVersionDB.sort((a, b) => {
-            const nameA = a[1].replace("Preview ", "").replace("Release ", "");
-            const nameB = b[1].replace("Preview ", "").replace("Release ", "");
-            return nameA.localeCompare(nameB);
-        });
-        versionNamesForUI.sort((a, b) => {
-            const nameA = a.replace("Preview ", "").replace("Release ", "");
-            const nameB = b.replace("Preview ", "").replace("Release ", "");
-            return nameA.localeCompare(nameB);
         });
 
         window?.webContents.send("availableVersions", versionNamesForUI);
