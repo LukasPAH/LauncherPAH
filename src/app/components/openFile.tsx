@@ -20,7 +20,7 @@ interface IOpenFileProps {
 export default function ScrollDialog(props: IOpenFileProps) {
     const { open, profiles } = props;
 
-    const [selectedProfile, setSelectedProfile] = React.useState(props.selectedProfile as IProfile);
+    const [selectedProfile, setSelectedProfile] = React.useState(props.selectedProfile);
     const [installationLock, setInstallationLock] = React.useState(false);
 
     React.useEffect(() => {
@@ -81,7 +81,9 @@ export default function ScrollDialog(props: IOpenFileProps) {
                         </Button>
                         <Button
                             onClick={() => {
-                                props.callback(selectedProfile);
+                                if (selectedProfile) {
+                                    props.callback(selectedProfile);
+                                }
                             }}
                         >
                             Ok

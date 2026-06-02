@@ -10,7 +10,7 @@ import { Typography } from "@mui/material";
 
 export interface IDropdownProps {
     profiles: IProfiles;
-    selectedProfle: IProfile;
+    selectedProfle: IProfile | undefined;
     enableNewButton?: boolean;
     callback: (profile: IProfile) => void;
     newButtonCallback?: () => void;
@@ -38,7 +38,7 @@ export default function Dropdown(props: IDropdownProps) {
 
     return (
         <Box>
-            <Box sx={{maxWidth:props.width ?? 180}}>
+            <Box sx={{ maxWidth: props.width ?? 180 }}>
                 <Button
                     sx={{ backgroundColor: "rgb(55, 65, 81)", minWidth: 180, color: "white", display: "flex", flexDirection: "column" }}
                     id="demo-customized-button"
@@ -56,8 +56,8 @@ export default function Dropdown(props: IDropdownProps) {
                         />
                     }
                 >
-                    {props.selectedProfle.name}
-                <Typography sx={{ textTransform: "none", fontSize: 12, color: "white" }}>{props.selectedProfle.version}</Typography>
+                    {props?.selectedProfle?.name}
+                    <Typography sx={{ textTransform: "none", fontSize: 12, color: "white" }}>{props?.selectedProfle?.version}</Typography>
                 </Button>
             </Box>
             <StyledMenu
@@ -95,7 +95,9 @@ export default function Dropdown(props: IDropdownProps) {
                             },
                         }}
                         onClick={() => {
-                            props?.newButtonCallback();
+                            if (props.newButtonCallback !== undefined) {
+                                props.newButtonCallback();
+                            }
                             handleClose();
                         }}
                         disableRipple

@@ -20,7 +20,10 @@ let profiles: IProfiles = {};
 export async function addProfile(name: string, versionIndex: number, protonOptions?: IProtonOptions) {
     const profile = name.replaceAll(" ", "_");
     const versions = await getBackendVersionDB();
-    const [_, versionName] = versions[versionIndex];
+    const versionName = versions[versionIndex]?.[1];
+    if (versionName === undefined) {
+        return;
+    }
     profiles[profile] = {
         name: name,
         version: versionName,
@@ -50,15 +53,18 @@ export async function editProfile(name: string, index: number, beforeName: strin
     const before = beforeName;
     const after = name;
     const beforeProfile = profiles[before.replaceAll(" ", "_")];
-    if (before === after) {
+    if (before === after && beforeProfile) {
         const versions = await getBackendVersionDB();
-        const [_, versionName] = versions[index];
+        const versionName = versions[index]?.[1];
+        if (versionName === undefined) {
+            return;
+        }
         beforeProfile.name = name;
         beforeProfile.version = versionName;
         readProfiles();
         return;
     }
-    const protonOptions = beforeProfile.protonOptions;
+    const protonOptions = beforeProfile?.protonOptions;
     await removeProfile(before, false);
     const beforeProfileLocation = path.join(profilesLocation, beforeName);
     const afterProfileLocation = path.join(profilesLocation, name);

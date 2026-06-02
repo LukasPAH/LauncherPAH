@@ -20,6 +20,9 @@ export async function getLatestRelease() {
     const releaseVersions = backendVersionDB.filter((value) => value[1].includes("Release") && !value[1].toLowerCase().includes("sideloaded"));
 
     const latestRelease = releaseVersions[releaseVersions.length - 1];
+    if (latestRelease === undefined) {
+        throw new Error("Failed to find latest release.");
+    }
     const latestReleaseName = latestRelease[1];
     return latestReleaseName;
 }
@@ -29,6 +32,9 @@ export async function getLatestPreview() {
     const releaseVersions = backendVersionDB.filter((value) => value[1].includes("Preview"));
 
     const latestPreview = releaseVersions[releaseVersions.length - 1];
+    if (latestPreview === undefined) {
+        throw new Error("Failed to find latest preview.");
+    }
     const latestPreviewName = latestPreview[1];
     return latestPreviewName;
 }

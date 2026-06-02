@@ -120,7 +120,7 @@ function RemoveModal(props: IRemoveModalProps) {
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
-    const removeModalText = `Are you sure you want to permanently delete ${props.versions[props.index].toLowerCase()}?`;
+    const removeModalText = `Are you sure you want to permanently delete ${props.versions[props.index]?.toLowerCase() ?? "this"}?`;
 
     return (
         <div>

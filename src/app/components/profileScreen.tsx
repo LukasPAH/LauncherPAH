@@ -30,7 +30,7 @@ export default function ProfileScreen(props: IButtonStackProps) {
     const profiles = Object.entries(props.profiles);
 
     const [versionModal, setVersionModal] = React.useState(false);
-    const [selectedProfile, setSelectedProfile] = React.useState(undefined) as [IProfile, React.Dispatch<React.SetStateAction<IProfile | undefined>>];
+    const [selectedProfile, setSelectedProfile] = React.useState<IProfile | undefined>(undefined);
 
     function addProfile(index: number, profileName: string, beforeProfileName?: string) {
         setVersionModal(false);
@@ -70,7 +70,7 @@ export default function ProfileScreen(props: IButtonStackProps) {
                     <div style={{ width: "1rem", height: "100%" }}></div>
                     <Divider sx={{ bgcolor: "#535353ff", width: "85%", justifySelf: "center" }}></Divider>
                 </Box>
-                {profiles.map(([profileName, profile], index) => (
+                {profiles.map(([_, profile], index) => (
                     <Box key={`div${index}`} alignItems="center">
                         <Typography sx={{ color: "white", textAlign: "center" }} key={index} variant="body1">
                             {`${profile.name} - ${profile.version}`}
@@ -104,7 +104,11 @@ export default function ProfileScreen(props: IButtonStackProps) {
                                 {"Edit"}
                             </Button>
                             <Box>{profile.name !== "Default" && profile.name !== "Preview" && <div style={{ width: "1rem", height: "100%" }}></div>}</Box>
-                            <Box>{profile.name !== "Default" && profile.name !== "Preview" && <RemoveModal profiles={props.profiles} index={index}></RemoveModal>}</Box>
+                            <Box>
+                                {profile.name !== "Default" && profile.name !== "Preview" && (
+                                    <RemoveModal profiles={props.profiles} index={index}></RemoveModal>
+                                )}
+                            </Box>
                         </Box>
                         <div style={{ width: "1rem", height: "100%" }}></div>
                         <Divider sx={{ bgcolor: "#535353ff", width: "85%", justifySelf: "center" }}></Divider>
@@ -163,7 +167,7 @@ function RemoveModal(props: IRemoveModalProps) {
 
     const profiles = Object.entries(props.profiles);
 
-    const removeModalText = `Are you sure you want to permanently remove the following profile?${profiles[props.index][0]}`;
+    const removeModalText = `Are you sure you want to permanently remove the following profile?${profiles[props.index]?.[0]}`;
 
     return (
         <div>
@@ -192,7 +196,10 @@ function RemoveModal(props: IRemoveModalProps) {
                             startIcon={<DeleteIcon></DeleteIcon>}
                             onClick={() => {
                                 handleClose();
-                                removeProfile(profiles[props.index][1].name);
+                                const profileName = profiles[props.index]?.[1]?.name;
+                                if (profileName) {
+                                    removeProfile(profileName);
+                                }
                             }}
                         >
                             {"Remove"}

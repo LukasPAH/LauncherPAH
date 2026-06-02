@@ -34,8 +34,8 @@ export default function BasicTabs(props: ITabProps) {
         setValue(newValue);
     };
 
-    const [versions, setVersions] = React.useState([]) as [string[], React.Dispatch<React.SetStateAction<any[]>>];
-    const [availableVersions, setAvailableVersions] = React.useState([]) as [string[], React.Dispatch<React.SetStateAction<any[]>>];
+    const [versions, setVersions] = React.useState<string[]>([]);
+    const [availableVersions, setAvailableVersions] = React.useState<string[]>([]);
 
     window.electronAPI.on("installedVersions", (versionsList: string[]) => {
         setVersions(versionsList);

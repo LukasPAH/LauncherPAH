@@ -3,5 +3,8 @@ import { getInstalledVersions, removeInstalledVersion } from "../../managers/ver
 export async function removeVersion(index: number) {
     const versions = getInstalledVersions();
     const version = versions[index];
-    await removeInstalledVersion(version)
+    if (version === undefined) {
+        return;
+    }
+    await removeInstalledVersion(version);
 }

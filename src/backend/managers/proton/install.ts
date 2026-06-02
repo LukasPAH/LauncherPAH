@@ -22,6 +22,9 @@ export async function installProton(profile: IProfile): Promise<IProtonOptions> 
     }
 
     const latestProtonRelease = protonVersions[0];
+    if (latestProtonRelease === undefined) {
+        throw new Error("Failed to get the latest proton release.");
+    }
     const protonPath = path.join(settings.protonLocation, latestProtonRelease.name);
     const defaultProtonOptions: IProtonOptions = {
         enableWayland: false,
@@ -45,7 +48,10 @@ async function downloadProton(versions: IAvailableProtonVersion[], protonOptions
     const version = versions.find((version) => {
         return version.name === protonOptions.protonGDKVersion;
     });
-    const url = version !== undefined ? version.url : versions[0].url;
+    const url = version !== undefined ? version.url : versions[0]?.url;
+    if (url === undefined) {
+        throw new Error("Invalid proton url.");
+    }
     const promises: Promise<void>[] = [];
     await download(window, url, {
         directory: path,

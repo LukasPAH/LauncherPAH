@@ -6,6 +6,9 @@ import * as path from "path";
 export async function openFolder(index: number) {
     const versions = getInstalledVersions();
     const version = versions[index];
+    if (version === undefined) {
+        return;
+    }
     shell.openPath(path.join(installationsLocation, version));
 }
 

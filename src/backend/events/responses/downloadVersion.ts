@@ -18,11 +18,11 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
     let filePath: string | undefined = undefined;
 
     const versionDB = await getBackendVersionDB();
-    const url = versionDB[DBIndex][0][0];
+    const url = versionDB[DBIndex]?.[0]?.[0];
 
     const versionNameRegex = /[^/]*.msixvc$/;
-    const regexMatch = url.match(versionNameRegex);
-    if (regexMatch === null) return;
+    const regexMatch = url?.match(versionNameRegex);
+    if (regexMatch === null || regexMatch === undefined) return;
     const versionName = regexMatch[0].replace(".msixvc", "");
 
     if (isVersionInstalled(versionName)) {
@@ -32,7 +32,13 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
 
     const fetchTimes: IURLFetchTimes[] = [];
 
-    for (const urlToUse of versionDB[DBIndex][0]) {
+    const db = versionDB[DBIndex];
+
+    if (db === undefined) {
+        return;
+    }
+
+    for (const urlToUse of db[0]) {
         const startTime = Date.now();
         await fetch(urlToUse, {
             method: "HEAD",
@@ -51,7 +57,10 @@ export async function downloadVersion(DBIndex: number, profile: IProfile) {
         return a.time - b.time;
     });
 
-    const urlToUse = sortedTimes[0].url;
+    const urlToUse = sortedTimes[0]?.url;
+    if (urlToUse === undefined) {
+        throw new Error(`Failed do download ${versionName}: invalid url.`);
+    }
 
     const versionNumber = prettifyVersionNumbers(versionName);
     if (versionNumber === undefined) {

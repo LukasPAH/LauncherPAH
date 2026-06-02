@@ -67,7 +67,7 @@ export default function ScrollDialog(props: IAddVersionProps) {
     }
 
     function filter(index: number) {
-        setFilterText(FilterEnum[index]);
+        setFilterText(FilterEnum[index] ?? "release");
     }
 
     return (
@@ -96,9 +96,16 @@ export default function ScrollDialog(props: IAddVersionProps) {
                 disableRestoreFocus={true}
             >
                 <Box>
-                    {selectedProfile === undefined && <TextBox disallowedValues={disallowedValues} nameAllowedCallback={textChangeCallback} nameCallback={textCallback}></TextBox>}
+                    {selectedProfile === undefined && (
+                        <TextBox disallowedValues={disallowedValues} nameAllowedCallback={textChangeCallback} nameCallback={textCallback}></TextBox>
+                    )}
                     {selectedProfile !== undefined && (
-                        <DefaultTextBox defaultValue={selectedProfile.name} disallowedValues={disallowedValues} nameAllowedCallback={textChangeCallback} nameCallback={textCallback}></DefaultTextBox>
+                        <DefaultTextBox
+                            defaultValue={selectedProfile.name}
+                            disallowedValues={disallowedValues}
+                            nameAllowedCallback={textChangeCallback}
+                            nameCallback={textCallback}
+                        ></DefaultTextBox>
                     )}
                 </Box>
                 <DialogTitle sx={{ color: "white", padding: 0 }} id="scroll-dialog-title">
