@@ -12,6 +12,7 @@ import * as tar from "tar";
 
 import { window } from "../../main";
 import { editConfigFile } from "../../utils/editGameConfig";
+import { guidToBytes, hexToBytes } from "../../utils/hex";
 
 const dockerJSON = {
     services: {
@@ -37,6 +38,29 @@ const dockerJSON = {
 };
 
 const dockerComposeYaml = dump(dockerJSON);
+
+async function writeTestCik() {
+    const testCikUUID = "33EC8436-5A0E-4F0D-B1CE-3F29C3955039";
+    const testCik = "6786C11B788ED5CCE3C7695425CB82970347180650893D1B5613B2EFB33F9F4E";
+
+    const uuidBytes = guidToBytes(testCikUUID);
+    const cikBytes = hexToBytes(testCik);
+
+    const result = new Uint8Array(uuidBytes.length + cikBytes.length);
+    result.set(uuidBytes, 0);
+    result.set(cikBytes, uuidBytes.length);
+
+    const fileName = testCikUUID.toLowerCase() + ".cik";
+    const cikFolder = path.join(settings.launcherLocation, "Cik");
+
+    if (!fs.existsSync(cikFolder)) {
+        await fsAsync.mkdir(cikFolder, { recursive: true });
+    }
+
+    const cikFile = path.join(cikFolder, fileName);
+
+    await fsAsync.writeFile(cikFile, result);
+}
 
 const installBatContents = `@echo off
 
@@ -93,6 +117,8 @@ export async function installLinux(file: string, window: Electron.BrowserWindow,
     const sharedFolder = path.join(dockerFolder, "shared");
     const targetLocation = path.join(sharedFolder, fileName.replace(".msixvc", "") + (sideloaded ? "_sideloaded" : ""));
     const finalLocation = path.join(settings.installationsLocation, fileName.replace(".msixvc", "") + (sideloaded ? "_sideloaded" : ""));
+
+    await writeTestCik();
 
     let ip = dockerIp;
 
