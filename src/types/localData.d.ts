@@ -30,7 +30,6 @@ interface ISettings {
     installDrive: Drive;
     lastLaunchedProfile: string;
     profiles: IProfiles;
-    dockerFolder?: string;
 }
 
 interface ILocalData {

@@ -20,10 +20,15 @@ export async function run(command: string, supressStdErr?: boolean): Promise<str
 
 export async function tryRun(command: string) {
     try {
-        const { stderr } = await execAsync(command, { shell: "bash" });
-        if (stderr) return false;
+        const { stderr, stdout } = await execAsync(command, { shell: "bash" });
+        console.log(stdout);
+        if (stderr) {
+            console.log(stderr);
+            return false;
+        }
         return true;
-    } catch {
+    } catch (error) {
+        console.log(error);
         return false;
     }
 }
