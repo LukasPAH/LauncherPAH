@@ -12,6 +12,7 @@ import { Unzip } from "zip-lib";
 import { window } from "../../main";
 import { editConfigFile } from "../../utils/editGameConfig";
 import { guidToBytes, hexToBytes } from "../../utils/hex";
+import { addInstallation } from "./readVersions";
 
 const XvdToolExtractionFolderName = "linux-x64";
 
@@ -90,6 +91,8 @@ export async function installLinux(file: string, window: Electron.BrowserWindow,
     if (sideloaded && fs.existsSync(windowsAppBootStrapDll)) {
         await fsAsync.rm(windowsAppBootStrapDll);
     }
+
+    await addInstallation();
 
     window.webContents.send("progressStage", "idle");
     settings.setInstallationLock(false);
