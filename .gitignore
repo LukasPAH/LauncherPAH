@@ -96,3 +96,7 @@ tmp_download/
 
 # Dist.
 dist/
+
+# Flatpak folders.
+repo
+generated-sources.json

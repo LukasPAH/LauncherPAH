@@ -33,6 +33,8 @@ if (started) {
     app.quit();
 }
 
+const iconPath = app.isPackaged ? path.join(process.resourcesPath, "icon.png") : path.join(__dirname, "../../images/icon.png");
+
 const createWindow = async () => {
     // Create the browser window.
     const mainWindow = new BrowserWindow({
@@ -46,6 +48,7 @@ const createWindow = async () => {
                 standard: "Roboto",
             },
         },
+        icon: iconPath,
     });
 
     mainWindow.removeMenu();

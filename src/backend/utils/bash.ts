@@ -3,6 +3,14 @@ import util from "util";
 
 export const execAsync = util.promisify(child_process.exec);
 
+export async function umuFlatpakRun(binaryLocation: string, environmentVariables: Record<string, string>, args: string[]) {
+    const environmentVariableStrings: string[] = [];
+    for (const [key, value] of Object.entries(environmentVariables)) {
+        environmentVariableStrings.push(`--env=${key}=${value.replace(/^'|'$/g, "")}`);
+    }
+    child_process.spawn("flatpak-spawn", ["--host", ...environmentVariableStrings, binaryLocation, ...args]);
+}
+
 export async function spawnDetached(command: string) {
     const child = child_process.spawn(command, { shell: "bash", detached: true, stdio: "ignore" });
     child.unref();

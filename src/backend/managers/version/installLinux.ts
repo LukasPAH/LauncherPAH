@@ -1,4 +1,4 @@
-import { tryRun, run } from "../../utils/bash";
+import { tryRun } from "../../utils/bash";
 import * as settings from "../../settings";
 import path from "node:path";
 import * as fsAsync from "node:fs/promises";

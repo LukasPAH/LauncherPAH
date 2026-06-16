@@ -3,7 +3,7 @@ import * as fsAsync from "node:fs/promises";
 import path from "path";
 import * as settings from "../../settings";
 import { getVersionFolderFromName } from "../../managers/profile/readProfiles";
-import { run, spawnDetached } from "../../utils/bash";
+import { run, spawnDetached, umuFlatpakRun } from "../../utils/bash";
 import * as tar from "tar";
 import { download } from "electron-dl";
 import { SSL_CERTS_LINK, UMU_LINK } from "../../consts";
@@ -27,27 +27,42 @@ export async function launchLinuxVersion(profile: IProfile, customLaunchCommand?
     const versionLocation = path.join(settings.installationsLocation, versionFolder, "Minecraft.Windows.exe");
     const inputInstallerLocation = path.join(settings.installationsLocation, versionFolder, "installers", "GameInputRedist.msi");
 
-    let environmentVariablesString = "";
+    const environmentVariables: Record<string, string> = {};
 
     if (protonOptions?.enableWayland === true) {
-        environmentVariablesString += "PROTON_ENABLE_WAYLAND=1 ";
+        environmentVariables["PROTON_ENABLE_WAYLAND"] = "1";
     }
     if (protonOptions?.enableHDR === true) {
-        environmentVariablesString += "PROTON_ENABLE_HDR=1 ";
+        environmentVariables["PROTON_ENABLE_HDR"] = "1";
     }
     if (protonOptions?.enableLogging === true) {
-        environmentVariablesString += "PROTON_LOG=1 ";
+        environmentVariables["PROTON_LOG"] = "1";
     }
 
     const protonFolder = path.join(settings.launcherLocation, "proton", protonOptions.protonGDKVersion);
 
-    environmentVariablesString += `PROTONPATH=${protonFolder}/ `;
-    environmentVariablesString += `PROTON_VERB=run WINEPREFIX='${profileFolder}'`;
+    const isFlatpak = !!process.env.FLATPAK_ID;
+
+    environmentVariables["PROTONPATH"] = `'${protonFolder}/'`;
+    environmentVariables["PROTON_VERB"] = "run";
+    environmentVariables["WINEPREFIX"] = `'${profileFolder}'`;
+    let environmentVariablesString = "";
+    for (const [key, value] of Object.entries(environmentVariables)) {
+        environmentVariablesString += `${key}=${value} `;
+    }
     if (!fs.existsSync(path.join(profileFolder, "drive_c", "Program Files", "Microsoft GameInput", "x64"))) {
-        await run(`${environmentVariablesString} ${umuBinary} ${inputInstallerLocation}`);
+        if (isFlatpak) {
+            await umuFlatpakRun(umuBinary, environmentVariables, [inputInstallerLocation]);
+        } else {
+            await run(`${environmentVariablesString} ${umuBinary} ${inputInstallerLocation}`);
+        }
     }
 
-    spawnDetached(`${environmentVariablesString} ${umuBinary} ${versionLocation}`); // minecraft://creator/?Editor=true
+    if (isFlatpak) {
+        umuFlatpakRun(umuBinary, environmentVariables, [versionLocation]); // "minecraft://creator/?Editor=true"
+    } else {
+        spawnDetached(`${environmentVariablesString} ${umuBinary} ${versionLocation}`); // minecraft://creator/?Editor=true
+    }
 
     settings.updateLastLaunchedProfileName(profile.name);
 }

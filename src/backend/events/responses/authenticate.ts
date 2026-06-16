@@ -24,11 +24,11 @@ export async function watchForLoginJSON() {
         if (event.eventType === "change" && event.filename === "login.json") {
             try {
                 const loginString = (await fsAsync.readFile(loginFile)).toString();
+                await fsAsync.rm(loginFile);
                 const loginJSON = parseLoginJSON(loginString);
                 if (loginJSON) {
                     await authenticate(loginJSON.verification_uri, loginJSON.user_code);
                 }
-                await fsAsync.rm(loginFile);
             } catch {
                 continue;
             }
@@ -62,22 +62,38 @@ function parseLoginJSON(dataString: string): ILoginJSON | undefined {
     return returnJSON;
 }
 
+let authWindowVar: BrowserWindow | undefined = undefined;
+
 /**
  *
  * @returns The refresh token after authenticating, or undefined if unable to authenticate.
  */
-export async function authenticate(verification_uri: string, user_code: string) {
+async function authenticate(verification_uri: string, user_code: string) {
+    if (authWindowVar !== undefined) {
+        return;
+    }
+
+    const height = 600;
+    const width = 500;
+    const authWindow = new BrowserWindow({ width: width, height: height, maxWidth: width, maxHeight: height, minWidth: width, minHeight: height });
+    authWindowVar = authWindow;
+    authWindow.on("close", () => {
+        authWindowVar = undefined;
+    });
+
     window?.webContents.send(
         "showModalMessage",
         `A new window will appear shortly. Please enter the following code into the box that pops up and follow the prompts to sign into Minecraft.\n${user_code}`,
         "Sign in Required",
     );
 
+    if (window !== null) {
+        if (window.isMinimized()) window.restore();
+        window.focus();
+    }
+
     console.log(user_code);
 
-    const height = 600;
-    const width = 500;
-    const authWindow = new BrowserWindow({ width: width, height: height, maxWidth: width, maxHeight: height, minWidth: width, minHeight: height });
     authWindow.removeMenu();
     authWindow.loadURL(verification_uri);
 
@@ -92,5 +108,6 @@ export async function authenticate(verification_uri: string, user_code: string) 
     }
 
     authWindow?.destroy();
+    authWindowVar = undefined;
     window?.webContents?.send("hideModalMessage");
 }
