@@ -1,12 +1,13 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
 import DropDown from "./dropDown";
-import { Button } from "@mui/material";
+import SplitButton from "./splitButton";
 
 interface IHomepageProps {
     profiles: IProfiles;
     availableVersions: string[];
     selectedProfile: IProfile;
+    isEditor?: boolean;
 }
 
 export default function HomePage(props: IHomepageProps) {
@@ -14,15 +15,16 @@ export default function HomePage(props: IHomepageProps) {
         window.electronAPI.send("setSelectedProfile", profile);
     }
 
-    function launchVersion() {
-        window.electronAPI.send("launchVersion", undefined);
-    }
-
     return (
         <Box>
             <Box sx={{ width: "100%", height: "100%" }}>
                 <div style={{ height: "calc(100vh - 2rem - 54px)", width: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Box component="img" sx={{ height: "100%", width: "100%", align: "center", aspectRatio: 1, objectFit: "cover" }} draggable={false} src="./bedrock_master.jpg"></Box>
+                    <Box
+                        component="img"
+                        sx={{ height: "100%", width: "100%", align: "center", aspectRatio: 1, objectFit: "cover" }}
+                        draggable={false}
+                        src="./bedrock_master.jpg"
+                    ></Box>
                 </div>
             </Box>
             <Box sx={{ position: "fixed", top: "7rem", left: 0, width: "100%", zIndex: 2 }}>
@@ -31,14 +33,12 @@ export default function HomePage(props: IHomepageProps) {
                 </Box>
             </Box>
             <Box sx={{ position: "fixed", bottom: "4rem", left: "1rem", width: "40%", zIndex: 2 }}>
-                <DropDown profiles={props.profiles} callback={selectVersion} enableNewButton={false} selectedProfle={props.selectedProfile}/>
+                <DropDown profiles={props.profiles} callback={selectVersion} enableNewButton={false} selectedProfle={props.selectedProfile} />
             </Box>
             {props.selectedProfile !== undefined && (
                 <Box sx={{ position: "fixed", bottom: "4rem", left: 0, width: "100%", zIndex: 1 }}>
                     <Box sx={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "center" }}>
-                        <Button variant="outlined" sx={{ fontSize: 20, backgroundColor: "#0A964F", color: "white", textShadow: "1px 1px 2px black", maxWidth: "360px" }} onClick={launchVersion}>
-                            {`Play ${props.selectedProfile.version}`}
-                        </Button>
+                        <SplitButton buttonText={props.selectedProfile.version} isEditor={props.isEditor}></SplitButton>
                     </Box>
                 </Box>
             )}

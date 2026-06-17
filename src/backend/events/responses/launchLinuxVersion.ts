@@ -58,10 +58,24 @@ export async function launchLinuxVersion(profile: IProfile, customLaunchCommand?
         }
     }
 
+    const isEditor = profile.editor;
+    let minecraftUriPrefix = "minecraft";
+    if (profile.version.toLocaleLowerCase().includes("preview")) {
+        minecraftUriPrefix = "minecraft-preview";
+    }
+
     if (isFlatpak) {
-        umuFlatpakRun(umuBinary, environmentVariables, [versionLocation]); // "minecraft://creator/?Editor=true"
+        const args: string[] = [versionLocation];
+        if (isEditor) {
+            args.push(`${minecraftUriPrefix}://creator/?Editor=true`);
+        }
+        umuFlatpakRun(umuBinary, environmentVariables, args);
     } else {
-        spawnDetached(`${environmentVariablesString} ${umuBinary} ${versionLocation}`); // minecraft://creator/?Editor=true
+        let args = "";
+        if (isEditor) {
+            args = ` ${minecraftUriPrefix}://creator/?Editor=true`;
+        }
+        spawnDetached(`${environmentVariablesString} ${umuBinary} ${versionLocation}${args}`);
     }
 
     settings.updateLastLaunchedProfileName(profile.name);

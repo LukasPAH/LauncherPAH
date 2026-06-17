@@ -36,12 +36,16 @@ export default function BasicTabs(props: ITabProps) {
 
     const [versions, setVersions] = React.useState<string[]>([]);
     const [availableVersions, setAvailableVersions] = React.useState<string[]>([]);
+    const [isEditor, setIsEditor] = React.useState(false);
 
     window.electronAPI.on("installedVersions", (versionsList: string[]) => {
         setVersions(versionsList);
     });
     window.electronAPI.on("availableVersions", (versionsList: string[]) => {
         setAvailableVersions(versionsList);
+    });
+    window.electronAPI.on("isEditor", (editor: boolean | undefined) => {
+        setIsEditor(editor ?? false);
     });
 
     return (
@@ -55,7 +59,7 @@ export default function BasicTabs(props: ITabProps) {
                 </Tabs>
             </Box>
             <CustomTabPanel value={value} index={0}>
-                <HomePage profiles={props.createdProfiles} availableVersions={availableVersions} selectedProfile={props.selectedProfile} />
+                <HomePage profiles={props.createdProfiles} availableVersions={availableVersions} selectedProfile={props.selectedProfile} isEditor={isEditor} />
             </CustomTabPanel>
             <CustomTabPanel value={value} index={1}>
                 <ButtonStack versions={availableVersions} installedVersions={versions} />

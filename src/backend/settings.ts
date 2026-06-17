@@ -137,6 +137,11 @@ export function getLastLaunchedProfileName() {
     return data.settings.lastLaunchedProfile;
 }
 
+export function getLastLaunchedProfile() {
+    const profileName = getLastLaunchedProfileName();
+    return data.settings.profiles[profileName.replaceAll(" ", "_")];
+}
+
 export async function getDefaultProfileVersion() {
     const defaultProfile = data.settings.profiles.Default;
     if (defaultProfile.name === undefined || defaultProfile.version === undefined || defaultProfile.version === "") {
@@ -198,5 +203,10 @@ export function setInstallationLock(lock: boolean) {
 
 export function setProtonOptions(profile: IProfile, protonOptions: IProtonOptions) {
     data.settings.profiles[profile.name.replaceAll(" ", "_")].protonOptions = protonOptions;
+    writeLocalData(data);
+}
+
+export function setProfileEditor(profile: IProfile, isEditor: boolean) {
+    data.settings.profiles[profile.name.replaceAll(" ", "_")].editor = isEditor;
     writeLocalData(data);
 }

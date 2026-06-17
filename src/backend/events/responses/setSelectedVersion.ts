@@ -3,6 +3,7 @@ import { updateLastLaunchedProfileName } from "../../settings";
 
 export async function setSelectedProfile(profile: IProfile) {
     updateLastLaunchedProfileName(profile.name);
+    window?.webContents.send("isEditor", profile.editor);
     window?.webContents.send("selectedProfile", profile);
 }
 

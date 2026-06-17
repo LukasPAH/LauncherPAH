@@ -24,6 +24,7 @@ import { getProfileFromName } from "./managers/profile/readProfiles";
 import { handleAssociations, getLaunchedFile, launchFile } from "./events/responses/handleAssociations";
 import { getProtonVersions } from "./managers/proton/getAvailableVersions";
 import { watchForLoginJSON } from "./events/responses/authenticate";
+import { setEditorOnStart, toggleEditor } from "./events/responses/editor";
 
 export let window: BrowserWindow | null = null;
 let launchedFile: string | undefined = undefined;
@@ -99,6 +100,7 @@ app.whenReady().then(async () => {
             profile = getProfileFromName("Default") as IProfile;
         }
         await setSelectedProfileOnStart(profile);
+        setEditorOnStart();
         if (launchedFile !== undefined) handleAssociations(launchedFile);
     });
     ipcMain.on("launchVersion", () => {
@@ -142,6 +144,9 @@ app.whenReady().then(async () => {
         const lock = getInstallationLock();
         if (lock === true) return;
         await launchFile(profile);
+    });
+    ipcMain.on("isEditor", (_, isEditor: boolean) => {
+        toggleEditor(isEditor);
     });
 });
 

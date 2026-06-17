@@ -45,4 +45,5 @@ interface IProfile {
     name: string;
     version: string;
     protonOptions?: IProtonOptions;
+    editor?: boolean;
 }
