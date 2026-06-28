@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=LauncherPAH
-Comment=A Minecraft Bedrock game launcher for GDK versions
-Exec=run.sh
-Icon=io.github.lukaspah.launcherpah
-Terminal=false
-Categories=Game;
