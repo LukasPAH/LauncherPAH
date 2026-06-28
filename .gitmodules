@@ -1,0 +1,3 @@
+[submodule "src-tauri/xodus"]
+	path = src-tauri/xodus
+	url = https://github.com/xodus-gaming/xodus.git
