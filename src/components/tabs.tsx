@@ -1,11 +1,11 @@
-import * as React from "react";
+import { ReactNode, useState, SyntheticEvent } from "react";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
 import HomePage from "./homePage";
 
 interface TabPanelProps {
-    children?: React.ReactNode;
+    children?: ReactNode;
     index: number;
     value: number;
 }
@@ -23,15 +23,15 @@ function CustomTabPanel(props: TabPanelProps) {
 }
 
 export default function BasicTabs(props: ITabProps) {
-    const [value, setValue] = React.useState(0);
+    const [value, setValue] = useState(0);
 
-    const handleChange = (_: React.SyntheticEvent, newValue: number) => {
+    const handleChange = (_: SyntheticEvent, newValue: number) => {
         setValue(newValue);
     };
 
-    const [versions, setVersions] = React.useState<string[]>([]);
-    const [availableVersions, setAvailableVersions] = React.useState<string[]>([]);
-    const [isEditor, setIsEditor] = React.useState(false);
+    const [versions, setVersions] = useState<string[]>([]);
+    const [availableVersions, setAvailableVersions] = useState<string[]>([]);
+    const [isEditor, setIsEditor] = useState(false);
 
     return (
         <Box sx={{ width: "100%" }}>
