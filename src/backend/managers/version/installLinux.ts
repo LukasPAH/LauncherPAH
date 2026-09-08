@@ -88,7 +88,7 @@ export async function installLinux(file: string, window: Electron.BrowserWindow,
     await editConfigFile(finalLocation);
 
     const windowsAppBootStrapDll = path.join(finalLocation, "Microsoft.WindowsAppRuntime.Bootstrap.dll");
-    if (sideloaded && fs.existsSync(windowsAppBootStrapDll)) {
+    if (fs.existsSync(windowsAppBootStrapDll)) {
         await fsAsync.rm(windowsAppBootStrapDll);
     }
 
